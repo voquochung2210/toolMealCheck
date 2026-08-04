@@ -29,9 +29,20 @@ export default function WeeklyMeals({ days, locationName }) {
       <div className="weekly-grid">
         {days.map((dayItem, idx) => {
           const registered = getRegisteredMeal(dayItem);
-          const dateStr = dayItem.ngay ? dayItem.ngay.split('T')[0] : '';
+          const rawDateStr = dayItem.ngay ? dayItem.ngay.split('T')[0] : '';
+          const formatDateDDMMYYYY = (isoStr) => {
+            if (!isoStr) return '';
+            const raw = isoStr.split('T')[0];
+            const parts = raw.split('-');
+            if (parts.length === 3) {
+              const [year, month, day] = parts;
+              return `${day}/${month}/${year}`;
+            }
+            return raw;
+          };
+          const formattedDateStr = formatDateDDMMYYYY(dayItem.ngay);
           const isToday =
-            new Date().toISOString().split('T')[0] === dateStr;
+            new Date().toISOString().split('T')[0] === rawDateStr;
 
           return (
             <div
@@ -47,7 +58,7 @@ export default function WeeklyMeals({ days, locationName }) {
             >
               <div className="meal-card-header">
                 <div className="meal-date">
-                  {dateStr}
+                  {formattedDateStr}
                   {isToday && (
                     <span
                       style={{
@@ -92,7 +103,7 @@ export default function WeeklyMeals({ days, locationName }) {
                   </div>
                   <div className="meal-card-footer">
                     <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <X size={14} /> Không ăn
+                      <X size={14} /> Chưa đăng ký
                     </span>
                     {dayItem.isKhoa && (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--warning-text)' }}>

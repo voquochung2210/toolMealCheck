@@ -10,15 +10,17 @@ export default function MealDetailModal({ dayItem, locationName, onClose }) {
   };
 
   const registeredMeal = getRegisteredMeal();
-  const dateStr = dayItem.ngay ? dayItem.ngay.split('T')[0] : '';
-  const formattedDate = dateStr
-    ? new Date(dateStr).toLocaleDateString('vi-VN', {
-        weekday: 'long',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
-    : '';
+  const formatDateDDMMYYYY = (isoStr) => {
+    if (!isoStr) return '';
+    const raw = isoStr.split('T')[0];
+    const parts = raw.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}/${month}/${year}`;
+    }
+    return raw;
+  };
+  const formattedDate = formatDateDDMMYYYY(dayItem.ngay);
 
   const getImageUrl = (rawPath) => {
     if (!rawPath) return null;
@@ -31,7 +33,7 @@ export default function MealDetailModal({ dayItem, locationName, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="glass-panel modal-content"
-        style={{ maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ maxWidth: 520 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
@@ -45,6 +47,8 @@ export default function MealDetailModal({ dayItem, locationName, onClose }) {
             <X size={18} />
           </button>
         </div>
+
+        <div className="modal-body">
 
         {/* Registered Status Banner */}
         <div style={{ marginBottom: 20 }}>
@@ -251,7 +255,9 @@ export default function MealDetailModal({ dayItem, locationName, onClose }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        </div>
+
+        <div className="modal-footer">
           <button type="button" className="btn-secondary" onClick={onClose} style={{ minWidth: 100, justifyContent: 'center' }}>
             Đóng
           </button>

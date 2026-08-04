@@ -167,8 +167,9 @@ export default function SettingsModal({ config, onClose, onSave }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Theme Selector */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <div className="modal-body">
+            {/* Theme Selector */}
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Palette size={16} /> Chủ Đề Giao Diện (Theme)
@@ -232,11 +233,11 @@ export default function SettingsModal({ config, onClose, onSave }) {
             {/* Installed Schedule Times List */}
             <div
               style={{
-                padding: '10px 14px',
+                padding: '6px 10px',
                 borderRadius: 'var(--radius-sm)',
                 background: 'var(--btn-secondary-bg)',
                 border: '1px solid var(--glass-border)',
-                marginBottom: 10,
+                marginBottom: 6,
               }}
             >
               <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5, fontWeight: 500 }}>
@@ -507,15 +508,17 @@ export default function SettingsModal({ config, onClose, onSave }) {
             )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-            <button type="button" className="btn-secondary" onClick={handleClose}>
-              Hủy
-            </button>
-            <button type="submit" className="btn-primary">
-              <Save size={16} /> Lưu Cài Đặt
-            </button>
-          </div>
-        </form>
+        </div>
+
+        <div className="modal-footer">
+          <button type="button" className="btn-secondary" onClick={handleClose}>
+            Hủy
+          </button>
+          <button type="submit" className="btn-primary">
+            <Save size={16} /> Lưu Cài Đặt
+          </button>
+        </div>
+      </form>
       </div>
     </div>
   );
