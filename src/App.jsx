@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
 import Header from './components/Header';
 import TodayMealCard from './components/TodayMealCard';
 import WeeklyMeals from './components/WeeklyMeals';
@@ -17,6 +18,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [loginError, setLoginError] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [updateDownloadedInfo, setUpdateDownloadedInfo] = useState(null);
 
   useEffect(() => {
     const theme = config?.theme || 'dark';
@@ -27,7 +29,7 @@ export default function App() {
     initApp();
 
     if (window.electronAPI) {
-      const unsubscribe = window.electronAPI.onMealDataUpdated((data) => {
+      const unsubscribeMeal = window.electronAPI.onMealDataUpdated((data) => {
         if (data && data.success) {
           setUser(data.user);
           setMealData({
@@ -38,7 +40,17 @@ export default function App() {
           });
         }
       });
-      return () => unsubscribe();
+
+      const unsubscribeUpdate = window.electronAPI.onUpdateStatus ? window.electronAPI.onUpdateStatus((data) => {
+        if (data?.status === 'downloaded') {
+          setUpdateDownloadedInfo(data);
+        }
+      }) : () => {};
+
+      return () => {
+        unsubscribeMeal();
+        unsubscribeUpdate();
+      };
     }
   }, []);
 
@@ -125,6 +137,43 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {updateDownloadedInfo && (
+        <div
+          style={{
+            background: 'linear-gradient(90deg, #10b981, #059669)',
+            color: '#ffffff',
+            padding: '8px 16px',
+            borderRadius: 8,
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            justify: 'space-between',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+          }}
+        >
+          <span>🎉 Đã tải xong bản cập nhật v{updateDownloadedInfo.version || ''}! Sẵn sàng nâng cấp.</span>
+          <button
+            type="button"
+            className="btn-primary"
+            style={{
+              padding: '4px 12px',
+              fontSize: '0.78rem',
+              background: '#ffffff',
+              color: '#059669',
+              fontWeight: 700,
+              gap: 6,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+            onClick={() => window.electronAPI?.quitAndInstall && window.electronAPI.quitAndInstall()}
+          >
+            <RefreshCw size={14} /> Khởi Động Lại Ngay
+          </button>
+        </div>
+      )}
+
       <Header
         user={user}
         loading={loading}

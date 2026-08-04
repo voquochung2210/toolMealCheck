@@ -1,6 +1,6 @@
 {
   "name": "tool-check-com",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "Tool tự động kiểm tra món ăn đã đặt THACO",
   "main": "electron/main.js",
   "type": "module",
@@ -32,7 +32,8 @@
           ]
         }
       ],
-      "icon": "electron/assets/icon.ico"
+      "icon": "electron/assets/icon.ico",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,

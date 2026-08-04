@@ -10,9 +10,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   minimizeToTray: () => ipcRenderer.invoke('app:minimizeToTray'),
   getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
   checkUpdate: () => ipcRenderer.invoke('app:checkUpdate'),
+  quitAndInstall: () => ipcRenderer.invoke('app:quitAndInstall'),
   onMealDataUpdated: (callback) => {
     const subscription = (_event, data) => callback(data);
     ipcRenderer.on('meal:updated', subscription);
     return () => ipcRenderer.removeListener('meal:updated', subscription);
+  },
+  onUpdateStatus: (callback) => {
+    const subscription = (_event, data) => callback(data);
+    ipcRenderer.on('update:status', subscription);
+    return () => ipcRenderer.removeListener('update:status', subscription);
   },
 });

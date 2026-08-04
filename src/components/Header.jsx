@@ -15,7 +15,7 @@ export default function Header({ user, onRefresh, onOpenSettings, onLogout, load
 
   const handleOpenPortal = () => {
     if (window.electronAPI) {
-      window.electronAPI.openExternalUrl('https://portal.thaco.com.vn/suat-an-chu-lai/lich-su');
+      window.electronAPI.openExternalUrl(import.meta.env.VITE_THACO_PORTAL_URL || 'https://portal.thaco.com.vn/suat-an-chu-lai/lich-su');
     }
   };
 

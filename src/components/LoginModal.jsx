@@ -12,7 +12,7 @@ export default function LoginModal({ onLogin, error }) {
     if (!username || !password) return;
 
     setLoading(true);
-    const domain = domainType === 'email' ? 'thaco.com.vn' : '';
+    const domain = domainType === 'email' ? (import.meta.env.VITE_THACO_DOMAIN || 'thaco.com.vn') : '';
     await onLogin({ username: username.trim(), password, domain });
     setLoading(false);
   };

@@ -1,9 +1,17 @@
-const API_TOKEN_URL = "https://portalgroupapi.thacochulai.vn/token";
+import dotenv from "dotenv";
+dotenv.config();
+
+const API_TOKEN_URL =
+  process.env.THACO_API_TOKEN_URL ||
+  "https://portalgroupapi.thacochulai.vn/token";
 const BASE_MEAL_API_URL =
+  process.env.THACO_BASE_MEAL_API_URL ||
   "https://chamcongapi.thacochulai.vn/api/KeySecure/Portal/ThucDon";
 const BASE_LOCATION_API_URL =
+  process.env.THACO_BASE_LOCATION_API_URL ||
   "https://chamcongapi.thacochulai.vn/api/KeySecure/Portal/DiaDiemAn";
-const STORAGE_BASE_URL = "https://storageapi.thacochulai.vn/";
+const STORAGE_BASE_URL =
+  process.env.THACO_STORAGE_BASE_URL || "https://storageapi.thacochulai.vn/";
 
 export function formatDateISO(dateObj) {
   const yyyy = dateObj.getFullYear();
@@ -84,7 +92,7 @@ export async function loginApi({username, password, domain = ""}) {
 export async function fetchLocationList({
   token,
   maNhanVien,
-  apiKey = "THACO2017",
+  apiKey = process.env.THACO_API_KEY,
 }) {
   const queryParams = new URLSearchParams({MaNhanVien: maNhanVien});
   const url = `${BASE_LOCATION_API_URL}?${queryParams.toString()}`;
@@ -124,7 +132,7 @@ export async function fetchMealList({
   tuNgay,
   denNgay,
   diaDiemAnId,
-  apiKey = "THACO2017",
+  apiKey = process.env.THACO_API_KEY,
 }) {
   const dateRange =
     tuNgay && denNgay ? {tuNgay, denNgay} : getOptimalDateRange("upcoming", 7);

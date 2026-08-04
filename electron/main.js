@@ -49,7 +49,9 @@ let currentConfig = {
   notifyEnabled: true,
   theme: "dark",
 };
-const DEFAULT_PORTAL_URL = process.env.THACO_PORTAL_URL;
+const DEFAULT_PORTAL_URL =
+  process.env.THACO_PORTAL_URL ||
+  "https://portal.thaco.com.vn/suat-an-chu-lai/lich-su";
 
 // Đảm bảo chỉ 1 tiến trình duy nhất được chạy (Single Instance)
 const gotTheLock = app.requestSingleInstanceLock();
@@ -80,7 +82,7 @@ if (!gotTheLock) {
   app.whenReady().then(async () => {
     // Đăng ký AppUserModelId cho Windows Toast Notification hiển thị chuẩn
     if (process.platform === "win32") {
-      app.setAppUserModelId("Cơm trưa hôm nay");
+      app.setAppUserModelId("Tool này khá xịn");
     }
 
     currentConfig = await loadConfig();
@@ -313,7 +315,7 @@ async function runDailyCheckFlow({silent = false} = {}) {
       maNhanVien: tokenData.userName,
       tuNgay: dateRange.tuNgay,
       denNgay: dateRange.denNgay,
-      apiKey: config.apiKey || "THACO2017",
+      apiKey: config.apiKey || process.env.THACO_API_KEY,
     });
 
     const days = mealResult.days || [];
@@ -416,16 +418,21 @@ async function runDailyCheckFlow({silent = false} = {}) {
 }
 
 function getScheduleTimes(config) {
+  let times = [];
   if (Array.isArray(config.scheduleTimes) && config.scheduleTimes.length > 0) {
-    return config.scheduleTimes;
-  }
-  if (typeof config.scheduleTime === "string" && config.scheduleTime.trim()) {
-    return config.scheduleTime
+    times = config.scheduleTimes;
+  } else if (
+    typeof config.scheduleTime === "string" &&
+    config.scheduleTime.trim()
+  ) {
+    times = config.scheduleTime
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
+  } else {
+    times = ["10:30"];
   }
-  return ["10:30"];
+  return times.slice(0, 3);
 }
 
 async function setupScheduler() {
@@ -532,6 +539,16 @@ ipcMain.handle("app:getVersion", () => {
   return app.getVersion();
 });
 
+ipcMain.handle("app:quitAndInstall", () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
+function sendUpdateToWindow(data) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("update:status", data);
+  }
+}
+
 ipcMain.handle("app:checkUpdate", async () => {
   if (!app.isPackaged) {
     return {
@@ -541,13 +558,49 @@ ipcMain.handle("app:checkUpdate", async () => {
     };
   }
   try {
+    autoUpdater.allowPrerelease = true;
     const result = await autoUpdater.checkForUpdates();
-    return {success: true, updateInfo: result ? result.updateInfo : null};
+    const currentVer = app.getVersion();
+    const latestVer = result?.updateInfo?.version;
+
+    if (latestVer && latestVer !== currentVer) {
+      return {
+        success: true,
+        isLatest: false,
+        message: `🎉 Đã có bản cập nhật mới v${latestVer}! Đang tự động tải về...`,
+        updateInfo: result.updateInfo,
+      };
+    } else {
+      return {
+        success: true,
+        isLatest: true,
+        message: `✅ Bạn đang sử dụng phiên bản mới nhất (v${currentVer}).`,
+        updateInfo: result ? result.updateInfo : null,
+      };
+    }
   } catch (err) {
-    let msg = err.message || "Không thể kết nối máy chủ cập nhật.";
-    if (msg.includes("404")) {
+    console.error("❌ Lỗi check update:", err);
+    const errStr = String(err?.message || err);
+    const statusCode = err?.statusCode || err?.response?.statusCode;
+
+    let msg = "Không thể kết nối máy chủ cập nhật.";
+    if (
+      statusCode === 404 ||
+      errStr.includes("404") ||
+      errStr.includes("latest.yml") ||
+      errStr.includes("Cannot find") ||
+      errStr.includes("disabled for this repository")
+    ) {
       msg =
-        "Chưa tìm thấy bản Release nào trên GitHub (Do Repo đang để chế độ Private hoặc chưa tạo Release).";
+        "Chưa tìm thấy bản Release chính thức (hoặc file latest.yml) nào trên GitHub Repo. Vui lòng kiểm tra nhãn Release trên GitHub.";
+    } else if (
+      errStr.includes("ENOTFOUND") ||
+      errStr.includes("net::ERR") ||
+      errStr.includes("offline")
+    ) {
+      msg = "Không có kết nối Internet hoặc không thể kết nối tới GitHub.";
+    } else {
+      msg = errStr.split("\n")[0].split(": headers:")[0].substring(0, 120);
     }
     return {success: false, error: msg};
   }
@@ -560,13 +613,23 @@ function setupAutoUpdater() {
   }
 
   autoUpdater.autoDownload = true;
+  autoUpdater.allowPrerelease = true;
 
   autoUpdater.on("checking-for-update", () => {
     console.log("🔍 Đang kiểm tra bản cập nhật mới...");
+    sendUpdateToWindow({
+      status: "checking",
+      message: "🔍 Đang kiểm tra máy chủ cập nhật...",
+    });
   });
 
   autoUpdater.on("update-available", (info) => {
     console.log(`🎉 Tìm thấy bản cập nhật mới v${info.version}`);
+    sendUpdateToWindow({
+      status: "available",
+      version: info.version,
+      message: `🎉 Đã tìm thấy bản cập nhật v${info.version}! Đang tự động tải về...`,
+    });
     if (Notification.isSupported()) {
       new Notification({
         title: "🚀 Đã Có Bản Cập Nhật Mới!",
@@ -577,24 +640,53 @@ function setupAutoUpdater() {
 
   autoUpdater.on("update-not-available", () => {
     console.log("✅ Bạn đang sử dụng phiên bản mới nhất.");
+    sendUpdateToWindow({
+      status: "not-available",
+      version: app.getVersion(),
+      message: `✅ Bạn đang sử dụng phiên bản mới nhất (v${app.getVersion()}).`,
+    });
   });
 
-  autoUpdater.on("error", (err) => {
-    console.error("⚠️ Lỗi kiểm tra cập nhật:", err.message);
+  autoUpdater.on("download-progress", (progressObj) => {
+    const percent = Math.round(progressObj.percent || 0);
+    const speedKB = Math.round((progressObj.bytesPerSecond || 0) / 1024);
+    console.log(`📥 Đang tải: ${percent}% (${speedKB} KB/s)`);
+    sendUpdateToWindow({
+      status: "downloading",
+      percent,
+      speedKB,
+      message: `📥 Đang tải xuống bản cập nhật... ${percent}% (${speedKB} KB/s)`,
+    });
   });
 
   autoUpdater.on("update-downloaded", (info) => {
     console.log("📦 Bản cập nhật đã sẵn sàng!");
+    sendUpdateToWindow({
+      status: "downloaded",
+      version: info.version,
+      message: `🎉 Bản v${info.version} đã tải xuống hoàn tất! Sẵn sàng cài đặt.`,
+    });
     if (Notification.isSupported()) {
       const noti = new Notification({
         title: "🎉 Cập Nhật Hoàn Tất",
         body: `Bản v${info.version} đã tải xong. Nhấn vào đây để khởi động lại ứng dụng và cập nhật!`,
       });
       noti.on("click", () => {
-        autoUpdater.quitAndInstall();
+        autoUpdater.quitAndInstall(false, true);
       });
       noti.show();
     }
+  });
+
+  autoUpdater.on("error", (err) => {
+    console.error("⚠️ Lỗi kiểm tra/tải cập nhật:", err?.message || err);
+    const rawMsg = err?.message || String(err);
+    const cleanMsg = rawMsg.split("\n")[0].substring(0, 120);
+    sendUpdateToWindow({
+      status: "error",
+      error: cleanMsg,
+      message: `❌ Lỗi tải cập nhật: ${cleanMsg}`,
+    });
   });
 
   setTimeout(() => {

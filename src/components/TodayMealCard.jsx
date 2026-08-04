@@ -11,7 +11,8 @@ export default function TodayMealCard({ todayMeal, locationName, lastUpdated }) 
     }
     if (!rawPath) return null;
     const cleanPath = String(rawPath).trim().replace(/\s+/g, '');
-    return `https://storageapi.thacochulai.vn/${cleanPath}`;
+    const baseUrl = (import.meta.env.VITE_THACO_STORAGE_BASE_URL || 'https://storageapi.thacochulai.vn/').replace(/\/$/, '');
+    return `${baseUrl}/${cleanPath.replace(/^\//, '')}`;
   };
 
   const imageUrl = todayMeal ? getImageUrl(todayMeal) : null;
