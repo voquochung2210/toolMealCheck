@@ -10,10 +10,12 @@ import {
   powerMonitor,
 } from "electron";
 import path from "path";
-import fs from "fs";
 import {fileURLToPath} from "url";
+import dotenv from "dotenv";
 import pkg from "electron-updater";
-const { autoUpdater } = pkg;
+const {autoUpdater} = pkg;
+
+dotenv.config();
 
 import {
   loginApi,
@@ -39,7 +41,7 @@ let mainWindow = null;
 let tray = null;
 let schedulerTimer = null;
 let currentConfig = {
-  apiKey: "THACO2017",
+  apiKey: process.env.THACO_API_KEY,
   scheduleTime: "10:30",
   scheduleTimes: ["10:30"],
   autoStart: true,
@@ -47,8 +49,7 @@ let currentConfig = {
   notifyEnabled: true,
   theme: "dark",
 };
-const DEFAULT_PORTAL_URL =
-  "https://portal.thaco.com.vn/suat-an-chu-lai/lich-su";
+const DEFAULT_PORTAL_URL = process.env.THACO_PORTAL_URL;
 
 // Đảm bảo chỉ 1 tiến trình duy nhất được chạy (Single Instance)
 const gotTheLock = app.requestSingleInstanceLock();
@@ -419,7 +420,10 @@ function getScheduleTimes(config) {
     return config.scheduleTimes;
   }
   if (typeof config.scheduleTime === "string" && config.scheduleTime.trim()) {
-    return config.scheduleTime.split(",").map((s) => s.trim()).filter(Boolean);
+    return config.scheduleTime
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
   return ["10:30"];
 }
@@ -530,13 +534,22 @@ ipcMain.handle("app:getVersion", () => {
 
 ipcMain.handle("app:checkUpdate", async () => {
   if (!app.isPackaged) {
-    return { success: false, message: "Đang ở môi trường Dev (chưa đóng gói)" };
+    return {
+      success: false,
+      message:
+        "Ứng dụng đang ở môi trường Dev (Chưa được đóng gói thành file .exe)",
+    };
   }
   try {
     const result = await autoUpdater.checkForUpdates();
-    return { success: true, updateInfo: result ? result.updateInfo : null };
+    return {success: true, updateInfo: result ? result.updateInfo : null};
   } catch (err) {
-    return { success: false, error: err.message };
+    let msg = err.message || "Không thể kết nối máy chủ cập nhật.";
+    if (msg.includes("404")) {
+      msg =
+        "Chưa tìm thấy bản Release nào trên GitHub (Do Repo đang để chế độ Private hoặc chưa tạo Release).";
+    }
+    return {success: false, error: msg};
   }
 });
 
@@ -585,12 +598,19 @@ function setupAutoUpdater() {
   });
 
   setTimeout(() => {
-    autoUpdater.checkForUpdatesAndNotify().catch((err) => console.error("AutoUpdate Err:", err));
+    autoUpdater
+      .checkForUpdatesAndNotify()
+      .catch((err) => console.error("AutoUpdate Err:", err));
   }, 5000);
 
-  setInterval(() => {
-    autoUpdater.checkForUpdatesAndNotify().catch((err) => console.error("AutoUpdate Err:", err));
-  }, 2 * 60 * 60 * 1000);
+  setInterval(
+    () => {
+      autoUpdater
+        .checkForUpdatesAndNotify()
+        .catch((err) => console.error("AutoUpdate Err:", err));
+    },
+    2 * 60 * 60 * 1000,
+  );
 }
 
 app.on("window-all-closed", () => {

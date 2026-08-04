@@ -20,7 +20,8 @@
     },
     "files": [
       "electron/**/*",
-      "dist-react/**/*"
+      "dist-react/**/*",
+      ".env"
     ],
     "win": {
       "target": [
@@ -49,6 +50,7 @@
     ]
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "electron-updater": "^6.8.9",
     "lucide-react": "^0.453.0",
     "react": "^18.3.1",
