@@ -1,0 +1,68 @@
+{
+  "name": "tool-check-com",
+  "version": "2.0.0",
+  "description": "Tool tự động kiểm tra món ăn đã đặt THACO",
+  "main": "electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "vite": "vite",
+    "build:react": "vite build",
+    "build": "vite build && electron-builder",
+    "preview": "vite preview",
+    "start": "electron ."
+  },
+  "build": {
+    "appId": "com.thaco.mealcheck",
+    "productName": "ThacoMealCheck",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "dist-react/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "electron/assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Thaco Meal Check"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "voquochung2210",
+        "repo": "toolMealCheck"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9",
+    "lucide-react": "^0.453.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.4.4",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^26.15.3",
+    "vite": "^5.4.10",
+    "wait-on": "^8.0.1"
+  }
+}
