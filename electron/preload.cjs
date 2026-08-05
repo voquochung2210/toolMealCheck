@@ -21,4 +21,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('update:status', subscription);
     return () => ipcRenderer.removeListener('update:status', subscription);
   },
+  saveOrderImage: (dataUrl, defaultName) => ipcRenderer.invoke('order:saveImage', dataUrl, defaultName),
+  saveOrderPDF: (htmlContent, defaultName) => ipcRenderer.invoke('order:savePDF', htmlContent, defaultName),
 });

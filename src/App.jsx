@@ -5,6 +5,8 @@ import TodayMealCard from './components/TodayMealCard';
 import WeeklyMeals from './components/WeeklyMeals';
 import SettingsModal from './components/SettingsModal';
 import LoginModal from './components/LoginModal';
+import DrinkOrderPage from './components/order/DrinkOrderPage';
+import MessageContainer from './components/ui/Message';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -19,6 +21,7 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [updateDownloadedInfo, setUpdateDownloadedInfo] = useState(null);
+  const [activeTab, setActiveTab] = useState('order'); // 'meal' | 'order'
 
   useEffect(() => {
     const theme = config?.theme || 'dark';
@@ -147,7 +150,7 @@ export default function App() {
             marginBottom: 12,
             display: 'flex',
             alignItems: 'center',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             fontSize: '0.85rem',
             fontWeight: 600,
             boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
@@ -177,6 +180,8 @@ export default function App() {
       <Header
         user={user}
         loading={loading}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onRefresh={handleRefresh}
         onOpenSettings={() => setShowSettings(true)}
         onLogout={handleLogout}
@@ -188,16 +193,22 @@ export default function App() {
 
       {user && (
         <main>
-          <TodayMealCard
-            todayMeal={mealData.todayMeal}
-            locationName={mealData.locationName}
-            lastUpdated={mealData.lastUpdated}
-          />
+          {activeTab === 'meal' ? (
+            <>
+              <TodayMealCard
+                todayMeal={mealData.todayMeal}
+                locationName={mealData.locationName}
+                lastUpdated={mealData.lastUpdated}
+              />
 
-          <WeeklyMeals
-            days={mealData.days}
-            locationName={mealData.locationName}
-          />
+              <WeeklyMeals
+                days={mealData.days}
+                locationName={mealData.locationName}
+              />
+            </>
+          ) : (
+            <DrinkOrderPage user={user} />
+          )}
         </main>
       )}
 
@@ -208,6 +219,8 @@ export default function App() {
           onSave={handleSaveConfig}
         />
       )}
+      
+      <MessageContainer />
     </div>
   );
 }

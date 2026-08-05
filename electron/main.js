@@ -8,8 +8,10 @@ import {
   shell,
   nativeImage,
   powerMonitor,
+  dialog,
 } from "electron";
 import path from "path";
+import fs from "fs/promises";
 import {fileURLToPath} from "url";
 import dotenv from "dotenv";
 import pkg from "electron-updater";
@@ -128,7 +130,7 @@ function getAppIcon() {
 function createTray() {
   const icon = getAppIcon();
   tray = new Tray(icon);
-  tray.setToolTip("Tool Kiểm Tra Cơm THACO");
+  tray.setToolTip("Cơm Nước THACO");
 
   updateTrayMenu();
 
@@ -215,7 +217,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     show: !isHiddenArg,
-    title: "Tool Tự Động Kiểm Tra Món Đặt Cơm THACO",
+    title: "Cơm Nước THACO",
     icon: iconPath,
     autoHideMenuBar: true,
     webPreferences: {
@@ -541,6 +543,50 @@ ipcMain.handle("app:getVersion", () => {
 
 ipcMain.handle("app:quitAndInstall", () => {
   autoUpdater.quitAndInstall(false, true);
+});
+
+// === ORDER EXPORT HANDLERS ===
+ipcMain.handle("order:saveImage", async (_event, dataUrl, defaultName) => {
+  const {canceled, filePath} = await dialog.showSaveDialog({
+    defaultPath: defaultName || "order.png",
+    filters: [{name: "PNG Image", extensions: ["png"]}],
+  });
+  if (canceled || !filePath) return {success: false};
+
+  try {
+    const base64 = dataUrl.replace(/^data:image\/png;base64,/, "");
+    await fs.writeFile(filePath, Buffer.from(base64, "base64"));
+    return {success: true, filePath};
+  } catch (err) {
+    console.error("Lỗi lưu ảnh:", err);
+    return {success: false, error: err.message};
+  }
+});
+
+ipcMain.handle("order:savePDF", async (_event, htmlContent, defaultName) => {
+  const {canceled, filePath} = await dialog.showSaveDialog({
+    defaultPath: defaultName || "order.pdf",
+    filters: [{name: "PDF", extensions: ["pdf"]}],
+  });
+  if (canceled || !filePath) return {success: false};
+
+  try {
+    const pdfWin = new BrowserWindow({show: false, width: 800, height: 600});
+    await pdfWin.loadURL(
+      `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`,
+    );
+    const pdfBuffer = await pdfWin.webContents.printToPDF({
+      printBackground: true,
+      pageSize: "A4",
+      margins: {top: 0.4, bottom: 0.4, left: 0.4, right: 0.4},
+    });
+    await fs.writeFile(filePath, pdfBuffer);
+    pdfWin.close();
+    return {success: true, filePath};
+  } catch (err) {
+    console.error("Lỗi lưu PDF:", err);
+    return {success: false, error: err.message};
+  }
 });
 
 function sendUpdateToWindow(data) {

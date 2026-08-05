@@ -1,7 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Utensils, RefreshCw, Settings, ExternalLink, LogOut, AlertTriangle } from 'lucide-react';
+import React, {useState, useEffect} from "react";
+import {
+  Utensils,
+  RefreshCw,
+  Settings,
+  ExternalLink,
+  LogOut,
+  AlertTriangle,
+  Coffee,
+} from "lucide-react";
 
-export default function Header({ user, onRefresh, onOpenSettings, onLogout, loading }) {
+export default function Header({
+  user,
+  onRefresh,
+  onOpenSettings,
+  onLogout,
+  loading,
+  activeTab,
+  onTabChange,
+}) {
   const [cooldown, setCooldown] = useState(0);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -15,7 +31,10 @@ export default function Header({ user, onRefresh, onOpenSettings, onLogout, load
 
   const handleOpenPortal = () => {
     if (window.electronAPI) {
-      window.electronAPI.openExternalUrl(import.meta.env.VITE_THACO_PORTAL_URL || 'https://portal.thaco.com.vn/suat-an-chu-lai/lich-su');
+      window.electronAPI.openExternalUrl(
+        import.meta.env.VITE_THACO_PORTAL_URL ||
+          "https://portal.thaco.com.vn/suat-an-chu-lai/lich-su",
+      );
     }
   };
 
@@ -38,12 +57,31 @@ export default function Header({ user, onRefresh, onOpenSettings, onLogout, load
             <Utensils size={22} />
           </div>
           <div>
-            <h1 className="brand-title">Cơm THACO</h1>
+            <h1 className="brand-title">Cơm nước THACO</h1>
             <p className="brand-subtitle">
-              {user ? `${user.fullName || user.userName} (${user.userName})` : 'Tool Tự Động Tra Cứu Suất Ăn'}
+              {user
+                ? `${user.fullName || user.userName} (${user.userName})`
+                : "Tool Tự Động Tra Cứu Suất Ăn"}
             </p>
           </div>
         </div>
+
+        {user && (
+          <div className="tab-switcher">
+            <button
+              className={`tab-btn ${activeTab === "order" ? "active" : ""}`}
+              onClick={() => onTabChange("order")}
+            >
+              <Coffee size={15} /> Order Nước
+            </button>
+            <button
+              className={`tab-btn ${activeTab === "meal" ? "active" : ""}`}
+              onClick={() => onTabChange("meal")}
+            >
+              <Utensils size={15} /> Cơm
+            </button>
+          </div>
+        )}
 
         <div className="header-actions">
           {cooldown > 0 ? (
@@ -52,15 +90,17 @@ export default function Header({ user, onRefresh, onOpenSettings, onLogout, load
               disabled
               title={`Vui lòng đợi ${cooldown}s để làm mới tiếp`}
               style={{
-                width: 'auto',
-                padding: '0 10px',
+                width: "auto",
+                padding: "0 10px",
                 gap: 5,
                 opacity: 0.7,
-                cursor: 'not-allowed',
+                cursor: "not-allowed",
               }}
             >
-              <RefreshCw size={16} className={loading ? 'spin' : ''} />
-              <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>{cooldown}s</span>
+              <RefreshCw size={16} className={loading ? "spin" : ""} />
+              <span style={{fontSize: "0.78rem", fontWeight: 600}}>
+                {cooldown}s
+              </span>
             </button>
           ) : (
             <button
@@ -69,7 +109,7 @@ export default function Header({ user, onRefresh, onOpenSettings, onLogout, load
               disabled={loading}
               title="Làm mới thực đơn"
             >
-              <RefreshCw size={18} className={loading ? 'spin' : ''} />
+              <RefreshCw size={18} className={loading ? "spin" : ""} />
             </button>
           )}
 
@@ -94,7 +134,7 @@ export default function Header({ user, onRefresh, onOpenSettings, onLogout, load
               className="btn-icon"
               onClick={() => setShowLogoutConfirm(true)}
               title="Đăng xuất tài khoản"
-              style={{ color: 'var(--danger-text)' }}
+              style={{color: "var(--danger-text)"}}
             >
               <LogOut size={18} />
             </button>
@@ -103,37 +143,50 @@ export default function Header({ user, onRefresh, onOpenSettings, onLogout, load
       </header>
 
       {showLogoutConfirm && (
-        <div className="modal-overlay" onClick={() => setShowLogoutConfirm(false)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
           <div
             className="glass-panel modal-content"
-            style={{ maxWidth: 360, textAlign: 'center' }}
+            style={{maxWidth: 360, textAlign: "center"}}
             onClick={(e) => e.stopPropagation()}
           >
             <div
               style={{
-                margin: '0 auto 14px auto',
+                margin: "0 auto 14px auto",
                 width: 50,
                 height: 50,
-                borderRadius: '50%',
-                background: 'var(--danger-bg)',
-                border: '1px solid var(--danger-border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--danger-text)',
+                borderRadius: "50%",
+                background: "var(--danger-bg)",
+                border: "1px solid var(--danger-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--danger-text)",
               }}
             >
               <AlertTriangle size={26} />
             </div>
-            <h3 className="modal-title" style={{ marginBottom: 8 }}>Xác Nhận Đăng Xuất</h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: 22, lineHeight: 1.4 }}>
-              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản <strong>{user?.fullName || user?.userName}</strong> không?
+            <h3 className="modal-title" style={{marginBottom: 8}}>
+              Xác Nhận Đăng Xuất
+            </h3>
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "var(--text-secondary)",
+                marginBottom: 22,
+                lineHeight: 1.4,
+              }}
+            >
+              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản{" "}
+              <strong>{user?.fullName || user?.userName}</strong> không?
             </p>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <div style={{display: "flex", gap: 12, justifyContent: "center"}}>
               <button
                 type="button"
                 className="btn-secondary"
-                style={{ flex: 1, justifyContent: 'center' }}
+                style={{flex: 1, justifyContent: "center"}}
                 onClick={() => setShowLogoutConfirm(false)}
               >
                 Hủy
@@ -143,9 +196,9 @@ export default function Header({ user, onRefresh, onOpenSettings, onLogout, load
                 className="btn-primary"
                 style={{
                   flex: 1,
-                  background: 'var(--danger-text)',
-                  boxShadow: 'none',
-                  justifyContent: 'center',
+                  background: "var(--danger-text)",
+                  boxShadow: "none",
+                  justifyContent: "center",
                 }}
                 onClick={handleConfirmLogout}
               >
