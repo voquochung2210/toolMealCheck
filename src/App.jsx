@@ -22,6 +22,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [updateDownloadedInfo, setUpdateDownloadedInfo] = useState(null);
   const [activeTab, setActiveTab] = useState('order'); // 'meal' | 'order'
+  const [orderRefreshTrigger, setOrderRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const theme = config?.theme || 'dark';
@@ -115,19 +116,23 @@ export default function App() {
   };
 
   const handleRefresh = async () => {
-    setLoading(true);
-    if (window.electronAPI) {
-      const res = await window.electronAPI.loadMealData(true);
-      if (res && res.success) {
-        setMealData({
-          todayMeal: res.todayMeal,
-          days: res.days,
-          locationName: res.locationName,
-          lastUpdated: res.lastUpdated,
-        });
+    if (activeTab === 'meal') {
+      setLoading(true);
+      if (window.electronAPI) {
+        const res = await window.electronAPI.loadMealData(true);
+        if (res && res.success) {
+          setMealData({
+            todayMeal: res.todayMeal,
+            days: res.days,
+            locationName: res.locationName,
+            lastUpdated: res.lastUpdated,
+          });
+        }
       }
+      setLoading(false);
+    } else if (activeTab === 'order') {
+      setOrderRefreshTrigger(prev => prev + 1);
     }
-    setLoading(false);
   };
 
   const handleSaveConfig = async (newConfig) => {
@@ -207,7 +212,7 @@ export default function App() {
               />
             </>
           ) : (
-            <DrinkOrderPage user={user} />
+            <DrinkOrderPage user={user} refreshTrigger={orderRefreshTrigger} />
           )}
         </main>
       )}

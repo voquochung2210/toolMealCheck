@@ -127,6 +127,7 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
   };
 
   return (
+    <>
     <div className="modal-overlay">
       <div className="glass-panel modal-content order-detail-modal">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
@@ -202,16 +203,17 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
         )}
 
         <OrderExport ref={exportRef} order={order} items={items} />
-        
-        <ConfirmModal 
-          isOpen={confirmState.isOpen}
-          title={confirmState.title}
-          message={confirmState.message}
-          confirmText={confirmState.confirmText || 'Xác nhận'}
-          onConfirm={confirmState.onConfirm}
-          onCancel={() => setConfirmState({ isOpen: false })}
-        />
       </div>
     </div>
+    
+    <ConfirmModal 
+      isOpen={confirmState.isOpen}
+      title={confirmState.title}
+      message={confirmState.message}
+      confirmText={confirmState.confirmText || 'Xác nhận'}
+      onConfirm={confirmState.onConfirm}
+      onCancel={() => setConfirmState({ isOpen: false })}
+    />
+    </>
   );
 }

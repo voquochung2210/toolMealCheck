@@ -38,24 +38,28 @@ export function useOrderDetail(orderId) {
       .channel(`public:order_items:${orderId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'order_items', filter: `order_id=eq.${orderId}` },
+        { event: '*', schema: 'public', table: 'order_items' },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setItems((prev) => {
-              if (prev.some(i => i.id === payload.new.id)) return prev;
-              return [...prev, payload.new];
-            });
+            if (payload.new.order_id === orderId) {
+              setItems((prev) => {
+                if (prev.some(i => i.id === payload.new.id)) return prev;
+                return [...prev, payload.new];
+              });
+            }
           } else if (payload.eventType === 'UPDATE') {
-            setItems((prev) =>
-              prev.map((i) => (i.id === payload.new.id ? payload.new : i))
-            );
+            if (payload.new.order_id === orderId) {
+              setItems((prev) =>
+                prev.map((i) => (i.id === payload.new.id ? payload.new : i))
+              );
+            }
           } else if (payload.eventType === 'DELETE') {
             const deletedId = payload.old?.id;
             if (deletedId) {
               setItems((prev) => prev.filter((i) => i.id !== deletedId));
             } else {
-              // If replica identity doesn't include old id, we must refresh manually
-              fetchOrderData(false); 
+              // Fallback
+              fetchOrderData(false);
             }
           }
         }

@@ -8,7 +8,7 @@ import ShopMenuManager from './ShopMenuManager';
 import OrderPasswordModal from './OrderPasswordModal';
 import Pagination from '../ui/Pagination';
 
-export default function DrinkOrderPage({ user }) {
+export default function DrinkOrderPage({ user, refreshTrigger }) {
   const { orders, loading, error, filter, setFilter, page, setPage, totalPages, fetchOrders } = useOrders();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -22,7 +22,7 @@ export default function DrinkOrderPage({ user }) {
       fetchOrders(filter, user.userName, searchTerm, page);
     }, 500);
     return () => clearTimeout(timer);
-  }, [filter, user.userName, searchTerm, page, fetchOrders]);
+  }, [filter, user.userName, searchTerm, page, fetchOrders, refreshTrigger]);
 
   const handleOrderClick = (order) => {
     if (order.password && order.created_by !== user.userName) {
