@@ -30,7 +30,7 @@ export default function MealDetailModal({ dayItem, locationName, onClose }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={(e) => { e.stopPropagation(); onClose(e); }}>
       <div
         className="glass-panel modal-content"
         style={{ maxWidth: 520 }}

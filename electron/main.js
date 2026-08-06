@@ -131,7 +131,7 @@ function getAppIcon() {
 function createTray() {
   const icon = getAppIcon();
   tray = new Tray(icon);
-  tray.setToolTip("Cơm Nước THACO");
+  tray.setToolTip("ThacoFood");
 
   updateTrayMenu();
 
@@ -218,7 +218,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     show: !isHiddenArg,
-    title: "ThacoFood",
+    title: `ThacoFood v${app.getVersion()}`,
     icon: iconPath,
     autoHideMenuBar: true,
     webPreferences: {
@@ -226,6 +226,10 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
     },
+  });
+
+  mainWindow.on('page-title-updated', (e) => {
+    e.preventDefault();
   });
 
   const isDev = !app.isPackaged || process.env.NODE_ENV === "development";
@@ -343,7 +347,11 @@ async function runDailyCheckFlow({silent = false} = {}) {
         : todayMeal.tenMonAn;
       summaryText = `${dishDetail}${locationName ? ` - ${locationName}` : ""}`;
 
-      if (config.notifyEnabled !== false && !silent && Notification.isSupported()) {
+      if (
+        config.notifyEnabled !== false &&
+        !silent &&
+        Notification.isSupported()
+      ) {
         const notiTitle = `🍱 Món Cơm Hôm Nay (${todayMeal.thu || todayStr})`;
 
         let notiMsg = `Món: ${todayMeal.tenMonAn}`;
@@ -394,7 +402,11 @@ async function runDailyCheckFlow({silent = false} = {}) {
         notification.show();
       }
     } else {
-      if (config.notifyEnabled !== false && !silent && Notification.isSupported()) {
+      if (
+        config.notifyEnabled !== false &&
+        !silent &&
+        Notification.isSupported()
+      ) {
         new Notification({
           title: "🍱 Thông Báo Suất Ăn THACO",
           body: "Hôm nay bạn không có lịch đăng ký ăn cơm.",

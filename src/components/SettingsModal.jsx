@@ -158,7 +158,7 @@ export default function SettingsModal({ config, onClose, onSave }) {
   ];
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
+    <div className="modal-overlay" onClick={(e) => { e.stopPropagation(); handleClose(e); }}>
       <div className="glass-panel modal-content" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">Cài Đặt Hệ Thống</h3>

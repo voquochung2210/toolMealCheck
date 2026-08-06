@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useOrderDetail } from '../../hooks/useOrderDetail';
 import { orderService } from '../../services/orderService';
-import { Store, Clock, Lock, LockOpen, Image as ImageIcon, FileText, Trash2 } from 'lucide-react';
+import { Store, Clock, Lock, LockOpen, Image as ImageIcon, FileText, Trash2, Copy } from 'lucide-react';
 import QRSection from './QRSection';
 import RegisterDrinkForm from './RegisterDrinkForm';
 import OrderItemList from './OrderItemList';
@@ -14,12 +14,21 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
   const [editingItem, setEditingItem] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmState, setConfirmState] = useState({ isOpen: false });
+  const [isLocking, setIsLocking] = useState(false);
   const exportRef = useRef(null);
+
+  const handleCopy = (text, type) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success(`Đã copy ${type}!`);
+    }).catch(() => {
+      toast.error(`Lỗi copy ${type}`);
+    });
+  };
 
   if (loading) {
     return (
-      <div className="modal-overlay">
-        <div className="glass-panel modal-content" style={{ textAlign: 'center', padding: '40px' }}>
+      <div className="modal-overlay" onClick={(e) => { e.stopPropagation(); onClose(e); }}>
+        <div className="glass-panel modal-content" style={{ textAlign: 'center', padding: '40px' }} onClick={(e) => e.stopPropagation()}>
           Đang tải chi tiết...
         </div>
       </div>
@@ -28,8 +37,8 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
 
   if (error || !order) {
     return (
-      <div className="modal-overlay">
-        <div className="glass-panel modal-content">
+      <div className="modal-overlay" onClick={(e) => { e.stopPropagation(); onClose(e); }}>
+        <div className="glass-panel modal-content" onClick={(e) => e.stopPropagation()}>
           <h2 className="modal-title">Lỗi</h2>
           <p>{error || 'Không tìm thấy order'}</p>
           <button className="btn-secondary" onClick={onClose}>Đóng</button>
@@ -85,10 +94,10 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
       title: 'Xóa đăng ký',
       message: `Xóa phần đăng ký món của ${item.user_name}?`,
       onConfirm: async () => {
-        setConfirmState({ isOpen: false });
         try {
           await orderService.removeOrderItem(item.id, orderId);
           toast.success('Đã xóa món!');
+          setConfirmState({ isOpen: false });
           refresh(false); // Manually refresh in background
         } catch (err) {
           toast.error('Lỗi xóa: ' + err.message);
@@ -97,13 +106,17 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
     });
   };
 
+
   const handleToggleLock = async () => {
+    setIsLocking(true);
     try {
       const newStatus = isLocked ? 'open' : 'locked';
       await orderService.updateOrderStatus(orderId, newStatus);
       toast.success(isLocked ? 'Đã mở lại order' : 'Đã khóa order');
     } catch (err) {
       toast.error('Lỗi: ' + err.message);
+    } finally {
+      setIsLocking(false);
     }
   };
 
@@ -114,10 +127,10 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
       message: 'Bạn có chắc chắn muốn xóa toàn bộ order này? Thao tác không thể hoàn tác.',
       confirmText: 'Xóa vĩnh viễn',
       onConfirm: async () => {
-        setConfirmState({ isOpen: false });
         try {
           await orderService.deleteOrder(orderId);
           toast.success('Đã xóa order');
+          setConfirmState({ isOpen: false });
           onClose(); // Parent sẽ tự gọi fetchOrders
         } catch (err) {
           toast.error('Lỗi xóa order: ' + err.message);
@@ -128,12 +141,32 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
 
   return (
     <>
-    <div className="modal-overlay">
-      <div className="glass-panel modal-content order-detail-modal">
+    <div className="modal-overlay" onClick={(e) => { e.stopPropagation(); onClose(e); }}>
+      <div className="glass-panel modal-content order-detail-modal" onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
-            <h2 className="modal-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              📋 {order.code ? `[${order.code}] ` : ''}{order.title}
+            <h2 className="modal-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              📋 
+              {order.code && (
+                <span 
+                  onClick={() => handleCopy(order.code, 'mã order')}
+                  style={{ color: 'var(--accent-primary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 6px', borderRadius: '4px', transition: 'background 0.2s' }}
+                  title="Copy mã order"
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--glass-border)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  [{order.code}] <Copy size={14} style={{ opacity: 0.8 }} />
+                </span>
+              )}
+              <span 
+                onClick={() => handleCopy(order.title, 'tên order')}
+                style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 6px', borderRadius: '4px', transition: 'background 0.2s' }}
+                title="Copy tên order"
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--glass-border)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                {order.title} <Copy size={14} style={{ opacity: 0.8 }} />
+              </span>
               {order.status === 'locked' && <span className="order-status-badge order-status-locked">Đã khóa</span>}
               {order.status === 'completed' && <span className="order-status-badge order-status-completed">Hoàn thành</span>}
               {order.status === 'open' && <span className="order-status-badge order-status-open">Đang mở</span>}
@@ -183,7 +216,7 @@ export default function OrderDetailModal({ orderId, user, onClose }) {
         {isOwner && (
           <div style={{ marginTop: '20px', padding: '15px', background: 'var(--btn-secondary-bg)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button className={isLocked ? "btn-primary" : "btn-secondary"} onClick={handleToggleLock} style={isLocked ? { background: 'var(--warning-bg)', color: 'var(--warning-text)' } : {}}>
+              <button className={isLocked ? "btn-primary" : "btn-secondary"} onClick={handleToggleLock} style={isLocked ? { background: 'var(--warning-bg)', color: 'var(--warning-text)', opacity: isLocking ? 0.7 : 1 } : { opacity: isLocking ? 0.7 : 1 }} disabled={isLocking}>
                 {isLocked ? <><LockOpen size={16} /> Mở Lại Order</> : <><Lock size={16} /> Khóa Order</>}
               </button>
               

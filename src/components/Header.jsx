@@ -57,7 +57,7 @@ export default function Header({
             <Utensils size={22} />
           </div>
           <div>
-            <h1 className="brand-title">Cơm nước THACO</h1>
+            <h1 className="brand-title">ThacoFood</h1>
             <p className="brand-subtitle">
               {user
                 ? `${user.fullName || user.userName} (${user.userName})`
@@ -145,7 +145,10 @@ export default function Header({
       {showLogoutConfirm && (
         <div
           className="modal-overlay"
-          onClick={() => setShowLogoutConfirm(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowLogoutConfirm(false);
+          }}
         >
           <div
             className="glass-panel modal-content"

@@ -8,6 +8,7 @@ import ConfirmModal from '../ui/ConfirmModal';
 export default function ShopMenuManager({ user, onClose }) {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedShop, setSelectedShop] = useState(null);
 
   // States for inline forms
@@ -52,6 +53,7 @@ export default function ShopMenuManager({ user, onClose }) {
     if (!newShopCode.trim()) return toast.error('Vui lòng nhập mã tiệm');
     if (!validateCode(newShopCode)) return toast.error('Mã tiệm chỉ gồm chữ không dấu, số, gạch ngang hoặc gạch dưới (VD: THE-COFFEE-HOUSE)');
     
+    setIsSubmitting(true);
     try {
       await shopService.createShop({ 
         name: newShopName.trim(), 
@@ -65,6 +67,8 @@ export default function ShopMenuManager({ user, onClose }) {
       toast.success('Đã tạo tiệm thành công');
     } catch (err) {
       toast.error('Lỗi: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -73,6 +77,7 @@ export default function ShopMenuManager({ user, onClose }) {
     if (!editShopCode.trim()) return toast.error('Vui lòng nhập mã tiệm');
     if (!validateCode(editShopCode)) return toast.error('Mã tiệm không hợp lệ');
 
+    setIsSubmitting(true);
     try {
       await shopService.updateShop(shopId, { 
         name: editShopName.trim(),
@@ -85,6 +90,8 @@ export default function ShopMenuManager({ user, onClose }) {
       toast.success('Đã cập nhật tiệm');
     } catch (err) {
       toast.error('Lỗi: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -95,12 +102,12 @@ export default function ShopMenuManager({ user, onClose }) {
       message: 'Bạn có chắc muốn xóa tiệm này? Các menu item cũng sẽ bị ẩn.',
       confirmText: 'Xóa tiệm',
       onConfirm: async () => {
-        setConfirmState({ isOpen: false });
         try {
           await shopService.deleteShop(shopId);
           if (selectedShop?.id === shopId) setSelectedShop(null);
           await loadShops();
           toast.success('Đã xóa tiệm!');
+          setConfirmState({ isOpen: false });
         } catch (err) {
           toast.error('Lỗi: ' + err.message);
         }
@@ -109,8 +116,8 @@ export default function ShopMenuManager({ user, onClose }) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="glass-panel modal-content manager-modal" style={{ padding: 0, overflow: 'hidden' }}>
+    <div className="modal-overlay" onClick={(e) => { e.stopPropagation(); onClose(e); }}>
+      <div className="glass-panel modal-content manager-modal" style={{ padding: 0, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
         
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', background: 'var(--bg-secondary)' }}>
@@ -175,8 +182,8 @@ export default function ShopMenuManager({ user, onClose }) {
                     <Input placeholder="VD: The Coffee House" value={newShopName} onChange={(e) => setNewShopName(e.target.value)} maxLength={100} />
                   </div>
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                    <button className="btn-primary" onClick={submitCreateShop}><Check size={16} /> Tạo Tiệm</button>
-                    <button className="btn-secondary" onClick={() => setAddingShop(false)}>Hủy</button>
+                    <button className="btn-primary" onClick={submitCreateShop} disabled={isSubmitting} style={{ opacity: isSubmitting ? 0.7 : 1 }}><Check size={16} /> Tạo Tiệm</button>
+                    <button className="btn-secondary" onClick={() => setAddingShop(false)} disabled={isSubmitting}>Hủy</button>
                   </div>
                 </div>
               </div>
@@ -194,8 +201,8 @@ export default function ShopMenuManager({ user, onClose }) {
                       <Input placeholder="Tên tiệm" value={editShopName} onChange={(e) => setEditShopName(e.target.value)} maxLength={100} autoFocus />
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => submitEditShop(selectedShop.id)}><Check size={16} /> Lưu Thay Đổi</button>
-                      <button className="btn-secondary" onClick={() => setEditingShop(false)}>Hủy</button>
+                      <button className="btn-primary" onClick={() => submitEditShop(selectedShop.id)} disabled={isSubmitting} style={{ opacity: isSubmitting ? 0.7 : 1 }}><Check size={16} /> Lưu Thay Đổi</button>
+                      <button className="btn-secondary" onClick={() => setEditingShop(false)} disabled={isSubmitting}>Hủy</button>
                     </div>
                   </div>
                 </div>
@@ -250,6 +257,7 @@ export default function ShopMenuManager({ user, onClose }) {
 function MenuItemsList({ shopId }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [addingItem, setAddingItem] = useState(false);
   const [newItemCode, setNewItemCode] = useState('');
@@ -289,6 +297,7 @@ function MenuItemsList({ shopId }) {
     
     const priceNum = parseInt(newItemPrice.replace(/,/g, ''), 10) || 0;
     
+    setIsSubmitting(true);
     try {
       await shopService.createMenuItem({
         shop_id: shopId,
@@ -306,6 +315,8 @@ function MenuItemsList({ shopId }) {
       toast.success('Đã thêm món');
     } catch (err) {
       toast.error('Lỗi: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -316,11 +327,11 @@ function MenuItemsList({ shopId }) {
       message: 'Xóa món này khỏi menu?',
       confirmText: 'Xóa',
       onConfirm: async () => {
-        setConfirmState({ isOpen: false });
         try {
           await shopService.deleteMenuItem(itemId);
           await loadItems();
           toast.success('Đã xóa món!');
+          setConfirmState({ isOpen: false });
         } catch (err) {
           toast.error('Lỗi: ' + err.message);
         }
@@ -367,8 +378,8 @@ function MenuItemsList({ shopId }) {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="btn-primary" onClick={submitAddItem}><Check size={16} /> Thêm Món</button>
-            <button className="btn-secondary" onClick={() => setAddingItem(false)}>Hủy</button>
+            <button className="btn-primary" onClick={submitAddItem} disabled={isSubmitting} style={{ opacity: isSubmitting ? 0.7 : 1 }}><Check size={16} /> Thêm Món</button>
+            <button className="btn-secondary" onClick={() => setAddingItem(false)} disabled={isSubmitting}>Hủy</button>
           </div>
         </div>
       )}

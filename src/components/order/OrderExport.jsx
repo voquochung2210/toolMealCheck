@@ -29,13 +29,14 @@ const OrderExport = forwardRef(({ order, items }, ref) => {
           .text-center { text-align: center; }
           .total { font-size: 16px; font-weight: bold; text-align: right; margin-bottom: 20px; }
           .qr-section { text-align: center; margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
-          .qr-img { width: 200px; height: 200px; object-fit: contain; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; }
+          .qr-img { max-width: 300px; max-height: 300px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; }
           .bank-info { font-size: 14px; font-weight: bold; color: #444; }
         </style>
       </head>
       <body>
         <div class="header">
           <h2>${order.title}</h2>
+          <div class="meta">Mã order: #${order.id}</div>
           <div class="meta">Tiệm: ${order.shop_name || 'Không xác định'}</div>
           <div class="meta">Người tạo: ${order.created_by_name}</div>
           <div class="meta">Ngày: ${new Date(order.created_at).toLocaleString('vi-VN')}</div>
@@ -132,6 +133,7 @@ const OrderExport = forwardRef(({ order, items }, ref) => {
       <div ref={exportRef} className="export-preview">
         <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
           <h2 style={{ margin: '0 0 5px' }}>{order.title}</h2>
+          <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>Mã order: #{order.id}</div>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>Tiệm: {order.shop_name || 'Không xác định'}</div>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>Người tạo: {order.created_by_name}</div>
           <div style={{ fontSize: '14px', color: '#666' }}>Ngày: {new Date(order.created_at).toLocaleString('vi-VN')}</div>
@@ -174,7 +176,7 @@ const OrderExport = forwardRef(({ order, items }, ref) => {
         {order.qr_image_base64 && (
           <div style={{ textAlign: 'center', marginTop: '30px', borderTop: '2px solid #eee', paddingTop: '20px' }}>
             <h4 style={{ margin: '0 0 10px' }}>QR Chuyển Khoản</h4>
-            <img src={order.qr_image_base64} alt="QR" style={{ width: '200px', height: '200px', objectFit: 'contain', border: '1px solid #eee', borderRadius: '8px', marginBottom: '10px' }} />
+            <img src={order.qr_image_base64} alt="QR" style={{ maxWidth: '300px', maxHeight: '300px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '10px' }} />
             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#444' }}>{order.bank_info}</div>
           </div>
         )}

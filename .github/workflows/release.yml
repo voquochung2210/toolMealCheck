@@ -7,7 +7,10 @@ on:
 
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
 
     permissions:
       contents: write
@@ -26,19 +29,32 @@ jobs:
       - name: Build React App
         run: npm run build:react
 
-      - name: Build Electron App
-        run: npx electron-builder --publish never
+      - name: Build Electron App (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npx electron-builder --win --publish never
 
-      - name: Show dist
-        if: always()
-        run: dir dist
+      - name: Build Electron App (macOS)
+        if: matrix.os == 'macos-latest'
+        run: npx electron-builder --mac --publish never
 
-      - name: Create GitHub Release & Upload Assets
+      - name: Create GitHub Release & Upload Assets (Windows)
+        if: matrix.os == 'windows-latest'
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.exe
             dist/*.blockmap
             dist/latest.yml
+          draft: false
+          generate_release_notes: true
+
+      - name: Create GitHub Release & Upload Assets (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.dmg
+            dist/*.zip
+            dist/latest-mac.yml
           draft: false
           generate_release_notes: true

@@ -1,9 +1,19 @@
 import React from 'react';
-import { Lock, Store, Users, Clock, CheckCircle, Unlock } from 'lucide-react';
+import { Lock, Store, Users, Clock, CheckCircle, Unlock, Copy } from 'lucide-react';
+import { toast } from '../ui/Message';
 
 export default function OrderCard({ order, onClick }) {
   const isLocked = order.status === 'locked';
   const isCompleted = order.status === 'completed';
+
+  const handleCopyCode = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(order.code).then(() => {
+      toast.success('Đã copy mã order: ' + order.code);
+    }).catch(() => {
+      toast.error('Lỗi copy mã order');
+    });
+  };
 
   const getStatusBadge = () => {
     if (isCompleted) return <span className="order-status-badge order-status-completed"><CheckCircle size={13} strokeWidth={2.5} /> Hoàn thành</span>;
@@ -23,19 +33,53 @@ export default function OrderCard({ order, onClick }) {
 
   return (
     <div className="glass-panel order-card" onClick={onClick}>
-      <div className="order-card-header">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
-            {order.password && <Lock size={14} color="var(--warning-text)" />}
-            {order.title}
+      <div className="order-card-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0, flex: 1 }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'flex-start', gap: '6px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+            {order.password && <Lock size={14} color="var(--warning-text)" style={{ flexShrink: 0, marginTop: '3px' }} />}
+            <span style={{ 
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden', 
+              textOverflow: 'ellipsis', 
+              wordBreak: 'break-word'
+            }} title={order.title}>
+              {order.title}
+            </span>
           </h3>
           {order.code && (
-            <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+            <span 
+              onClick={handleCopyCode}
+              style={{ 
+                fontSize: '0.85rem', 
+                color: 'var(--accent-primary)', 
+                fontWeight: 600, 
+                whiteSpace: 'nowrap', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                width: 'fit-content',
+                padding: '2px 4px',
+                marginLeft: '-4px',
+                borderRadius: '4px',
+                transition: 'background 0.2s ease'
+              }} 
+              title="Nhấn để copy mã order"
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--glass-border)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
               [{order.code}]
+              <Copy size={12} style={{ opacity: 0.8 }} />
             </span>
           )}
         </div>
-        {getStatusBadge()}
+        <div style={{ flexShrink: 0 }}>
+          {getStatusBadge()}
+        </div>
       </div>
       
       <div className="order-card-meta">

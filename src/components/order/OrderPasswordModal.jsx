@@ -32,7 +32,7 @@ export default function OrderPasswordModal({ order, onClose, onSuccess }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={(e) => { e.stopPropagation(); onClose(e); }}>
       <div className="glass-panel modal-content" style={{ maxWidth: '360px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
         <div style={{ margin: '0 auto 15px', width: '50px', height: '50px', background: 'var(--warning-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--warning-text)' }}>
           <Lock size={24} />

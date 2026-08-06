@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { shopService } from '../../services/shopService';
 import { Plus } from 'lucide-react';
 import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
+import { SearchableSelect } from '../ui/SearchableSelect';
 import { toast } from '../ui/Message';
 
 export default function RegisterDrinkForm({ shopId, onSubmit, loading, isLocked, initialData = null, onCancelEdit = null }) {
@@ -62,8 +62,15 @@ export default function RegisterDrinkForm({ shopId, onSubmit, loading, isLocked,
     }
   };
 
-  const handleDrinkChange = (e) => {
-    const val = e.target.value;
+  const menuOptions = useMemo(() =>
+    menuItems.map(item => ({
+      value: item.name,
+      label: `${item.name} (${new Intl.NumberFormat('vi-VN').format(item.default_price)}đ)`,
+    })),
+    [menuItems]
+  );
+
+  const handleDrinkChange = (val) => {
     if (val === '__custom__') {
       setIsCustomMode(true);
       setDrinkName('');
@@ -120,8 +127,68 @@ export default function RegisterDrinkForm({ shopId, onSubmit, loading, isLocked,
 
   if (isLocked) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center', background: 'var(--warning-bg)', color: 'var(--warning-text)', borderRadius: '8px', border: '1px solid var(--warning-border)' }}>
-        Order đã khóa, không thể đăng ký thêm.
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        padding: '40px 20px', 
+        background: 'var(--btn-secondary-bg)', 
+        borderRadius: '12px', 
+        border: '1px solid var(--glass-border)',
+        height: '100%',
+        minHeight: '350px',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Background decorative elements */}
+        <div style={{
+          position: 'absolute',
+          top: '-20%',
+          left: '-10%',
+          width: '200px',
+          height: '200px',
+          background: 'var(--warning-bg)',
+          borderRadius: '50%',
+          filter: 'blur(50px)',
+          opacity: 0.8,
+          zIndex: 0
+        }}></div>
+        <div style={{
+          position: 'absolute',
+          bottom: '-10%',
+          right: '-10%',
+          width: '150px',
+          height: '150px',
+          background: 'var(--accent-primary)',
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          opacity: 0.15,
+          zIndex: 0
+        }}></div>
+
+        {/* Main Content */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ 
+            position: 'relative', 
+            marginBottom: '20px',
+            width: '140px',
+            height: '140px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <img src="/locked_order.png" alt="Order Locked" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.12))' }} />
+          </div>
+          
+          <h3 style={{ margin: '0 0 10px 0', color: 'var(--text-primary)', fontSize: '1.3rem', fontWeight: 600 }}>
+            Order Đã Khóa
+          </h3>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5', maxWidth: '260px' }}>
+            Không thể đăng ký thêm món lúc này. Vui lòng liên hệ người tạo order nếu bạn cần hỗ trợ.
+          </p>
+        </div>
       </div>
     );
   }
@@ -139,13 +206,15 @@ export default function RegisterDrinkForm({ shopId, onSubmit, loading, isLocked,
         <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: 'var(--text-secondary)' }}>Món nước *</label>
         
         {!isCustomMode && menuItems.length > 0 ? (
-          <Select value={drinkName} onChange={handleDrinkChange} required>
-            <option value="">-- Chọn món --</option>
-            {menuItems.map(item => (
-              <option key={item.id} value={item.name}>{item.name} ({new Intl.NumberFormat('vi-VN').format(item.default_price)}đ)</option>
-            ))}
-            <option value="__custom__">+ Khác (Nhập tay)...</option>
-          </Select>
+          <SearchableSelect
+            options={menuOptions}
+            value={drinkName}
+            onChange={handleDrinkChange}
+            placeholder="Chọn món nước..."
+            searchPlaceholder="Tìm món..."
+            customOption={{ value: '__custom__', label: 'Khác (Nhập tay)...' }}
+            required
+          />
         ) : (
           <div style={{ display: 'flex', gap: '8px' }}>
             <Input 

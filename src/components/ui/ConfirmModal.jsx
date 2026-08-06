@@ -1,13 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
 export default function ConfirmModal({ isOpen, title, message, onConfirm, onCancel, confirmText = 'Xác nhận', cancelText = 'Hủy' }) {
+  const [isConfirming, setIsConfirming] = useState(false);
+
   if (!isOpen) return null;
 
+  const handleConfirm = async (e) => {
+    setIsConfirming(true);
+    try {
+      await onConfirm(e);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   return (
-    <div className="modal-overlay" style={{ zIndex: 9999 }}>
-      <div className="modal-content glass-panel" style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
-        <button className="btn-icon close-btn" onClick={onCancel} style={{ position: 'absolute', top: '15px', right: '15px' }}>
+    <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={(e) => { e.stopPropagation(); onCancel(e); }}>
+      <div className="modal-content glass-panel" style={{ maxWidth: '400px', width: '90%', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+        <button className="btn-icon close-btn" onClick={onCancel} style={{ position: 'absolute', top: '15px', right: '15px' }} disabled={isConfirming}>
           <X size={20} />
         </button>
         
@@ -28,14 +39,16 @@ export default function ConfirmModal({ isOpen, title, message, onConfirm, onCanc
               className="btn btn-secondary" 
               onClick={onCancel} 
               style={{ flex: 1, padding: '10px', display: 'flex', justifyContent: 'center' }}
+              disabled={isConfirming}
             >
               {cancelText}
             </button>
             <button 
-              onClick={onConfirm} 
-              style={{ flex: 1, padding: '10px', background: 'var(--danger-text)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center' }}
+              onClick={handleConfirm} 
+              style={{ flex: 1, padding: '10px', background: 'var(--danger-text)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', opacity: isConfirming ? 0.7 : 1 }}
+              disabled={isConfirming}
             >
-              {confirmText}
+              {isConfirming ? 'Đang xử lý...' : confirmText}
             </button>
           </div>
         </div>

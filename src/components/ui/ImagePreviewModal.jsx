@@ -8,7 +8,7 @@ export default function ImagePreviewModal({ isOpen, src, alt = 'Image Preview', 
   const modalContent = (
     <div 
       className="modal-overlay" 
-      onClick={onClose}
+      onClick={(e) => { e.stopPropagation(); onClose(e); }}
       style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       <div 

@@ -1,32 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
-import Header from './components/Header';
-import TodayMealCard from './components/TodayMealCard';
-import WeeklyMeals from './components/WeeklyMeals';
-import SettingsModal from './components/SettingsModal';
-import LoginModal from './components/LoginModal';
-import DrinkOrderPage from './components/order/DrinkOrderPage';
-import MessageContainer from './components/ui/Message';
+import React, {useState, useEffect} from "react";
+import {RefreshCw} from "lucide-react";
+import Header from "./components/Header";
+import TodayMealCard from "./components/TodayMealCard";
+import WeeklyMeals from "./components/WeeklyMeals";
+import SettingsModal from "./components/SettingsModal";
+import LoginModal from "./components/LoginModal";
+import DrinkOrderPage from "./components/order/DrinkOrderPage";
+import MessageContainer from "./components/ui/Message";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [mealData, setMealData] = useState({
     todayMeal: null,
     days: [],
-    locationName: '',
+    locationName: "",
     lastUpdated: null,
   });
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [loginError, setLoginError] = useState('');
+  const [loginError, setLoginError] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [updateDownloadedInfo, setUpdateDownloadedInfo] = useState(null);
-  const [activeTab, setActiveTab] = useState('order'); // 'meal' | 'order'
+  const [activeTab, setActiveTab] = useState("order"); // 'meal' | 'order'
   const [orderRefreshTrigger, setOrderRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    const theme = config?.theme || 'dark';
-    document.documentElement.setAttribute('data-theme', theme);
+    const theme = config?.theme || "dark";
+    document.documentElement.setAttribute("data-theme", theme);
   }, [config?.theme]);
 
   useEffect(() => {
@@ -45,11 +45,13 @@ export default function App() {
         }
       });
 
-      const unsubscribeUpdate = window.electronAPI.onUpdateStatus ? window.electronAPI.onUpdateStatus((data) => {
-        if (data?.status === 'downloaded') {
-          setUpdateDownloadedInfo(data);
-        }
-      }) : () => {};
+      const unsubscribeUpdate = window.electronAPI.onUpdateStatus
+        ? window.electronAPI.onUpdateStatus((data) => {
+            if (data?.status === "downloaded") {
+              setUpdateDownloadedInfo(data);
+            }
+          })
+        : () => {};
 
       return () => {
         unsubscribeMeal();
@@ -73,7 +75,7 @@ export default function App() {
           locationName: res.locationName,
           lastUpdated: res.lastUpdated,
         });
-      } else if (res && res.reason === 'unauthenticated') {
+      } else if (res && res.reason === "unauthenticated") {
         setUser(null);
       }
     }
@@ -81,9 +83,9 @@ export default function App() {
   };
 
   const handleLogin = async (credentials) => {
-    setLoginError('');
+    setLoginError("");
     if (!window.electronAPI) {
-      setLoginError('Không kết nối được với ứng dụng. Vui lòng khởi động lại.');
+      setLoginError("Không kết nối được với ứng dụng. Vui lòng khởi động lại.");
       return;
     }
 
@@ -100,10 +102,15 @@ export default function App() {
           });
         }
       } else {
-        setLoginError((result && result.error) || 'Đăng nhập không thành công. Kiểm tra lại tài khoản/mật khẩu.');
+        setLoginError(
+          (result && result.error) ||
+            "Đăng nhập không thành công. Kiểm tra lại tài khoản/mật khẩu.",
+        );
       }
     } catch (err) {
-      setLoginError(err.message || 'Đã xảy ra lỗi hệ thống khi kết nối tới THACO Portal.');
+      setLoginError(
+        err.message || "Đã xảy ra lỗi hệ thống khi kết nối tới THACO Portal.",
+      );
     }
   };
 
@@ -111,12 +118,17 @@ export default function App() {
     if (window.electronAPI) {
       await window.electronAPI.logout();
       setUser(null);
-      setMealData({ todayMeal: null, days: [], locationName: '', lastUpdated: null });
+      setMealData({
+        todayMeal: null,
+        days: [],
+        locationName: "",
+        lastUpdated: null,
+      });
     }
   };
 
   const handleRefresh = async () => {
-    if (activeTab === 'meal') {
+    if (activeTab === "meal") {
       setLoading(true);
       if (window.electronAPI) {
         const res = await window.electronAPI.loadMealData(true);
@@ -130,8 +142,8 @@ export default function App() {
         }
       }
       setLoading(false);
-    } else if (activeTab === 'order') {
-      setOrderRefreshTrigger(prev => prev + 1);
+    } else if (activeTab === "order") {
+      setOrderRefreshTrigger((prev) => prev + 1);
     }
   };
 
@@ -148,34 +160,40 @@ export default function App() {
       {updateDownloadedInfo && (
         <div
           style={{
-            background: 'linear-gradient(90deg, #10b981, #059669)',
-            color: '#ffffff',
-            padding: '8px 16px',
+            background: "linear-gradient(90deg, #10b981, #059669)",
+            color: "#ffffff",
+            padding: "8px 16px",
             borderRadius: 8,
             marginBottom: 12,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '0.85rem',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontSize: "0.85rem",
             fontWeight: 600,
-            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+            boxShadow: "0 4px 14px rgba(16, 185, 129, 0.3)",
           }}
         >
-          <span>🎉 Đã tải xong bản cập nhật v{updateDownloadedInfo.version || ''}! Sẵn sàng nâng cấp.</span>
+          <span>
+            🎉 Đã tải xong bản cập nhật v{updateDownloadedInfo.version || ""}!
+            Sẵn sàng nâng cấp.
+          </span>
           <button
             type="button"
             className="btn-primary"
             style={{
-              padding: '4px 12px',
-              fontSize: '0.78rem',
-              background: '#ffffff',
-              color: '#059669',
+              padding: "4px 12px",
+              fontSize: "0.78rem",
+              background: "#ffffff",
+              color: "#059669",
               fontWeight: 700,
               gap: 6,
-              border: 'none',
-              cursor: 'pointer',
+              border: "none",
+              cursor: "pointer",
             }}
-            onClick={() => window.electronAPI?.quitAndInstall && window.electronAPI.quitAndInstall()}
+            onClick={() =>
+              window.electronAPI?.quitAndInstall &&
+              window.electronAPI.quitAndInstall()
+            }
           >
             <RefreshCw size={14} /> Khởi Động Lại Ngay
           </button>
@@ -198,7 +216,7 @@ export default function App() {
 
       {user && (
         <main>
-          {activeTab === 'meal' ? (
+          {activeTab === "meal" ? (
             <>
               <TodayMealCard
                 todayMeal={mealData.todayMeal}
@@ -224,7 +242,7 @@ export default function App() {
           onSave={handleSaveConfig}
         />
       )}
-      
+
       <MessageContainer />
     </div>
   );

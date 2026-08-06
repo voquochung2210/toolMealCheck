@@ -5,6 +5,7 @@ import {orderService} from "../../services/orderService";
 import {Upload, Check, Eye, EyeOff} from "lucide-react";
 import {Input} from "../ui/Input";
 import {Select} from "../ui/Select";
+import {SearchableSelect} from "../ui/SearchableSelect";
 import {toast} from "../ui/Message";
 import ImagePreviewModal from "../ui/ImagePreviewModal";
 
@@ -139,8 +140,8 @@ export default function CreateOrderModal({user, onClose, onSuccess}) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="glass-panel modal-content" style={{maxWidth: "500px"}}>
+    <div className="modal-overlay" onClick={(e) => { e.stopPropagation(); onClose(e); }}>
+      <div className="glass-panel modal-content" style={{maxWidth: "500px"}} onClick={(e) => e.stopPropagation()}>
         <h2 className="modal-title">Tạo Order Nước Mới</h2>
 
         <form onSubmit={handleSubmit}>
@@ -154,19 +155,20 @@ export default function CreateOrderModal({user, onClose, onSuccess}) {
             containerStyle={{marginBottom: "15px"}}
           />
 
-          <Select
-            label="Chọn tiệm"
-            value={shopId}
-            onChange={(e) => setShopId(e.target.value)}
-            containerStyle={{marginBottom: "15px"}}
-          >
-            <option value="">-- Order tự do --</option>
-            {shops.map((shop) => (
-              <option key={shop.id} value={shop.id}>
-                {shop.name}
-              </option>
-            ))}
-          </Select>
+          <div className="form-group" style={{ marginBottom: "15px" }}>
+            <label className="form-label">Chọn tiệm</label>
+            <SearchableSelect
+              options={[
+                { value: "", label: "-- Order tự do --" },
+                ...shops.map((shop) => ({ value: shop.id, label: shop.name }))
+              ]}
+              value={shopId}
+              onChange={(value) => setShopId(value)}
+              placeholder="-- Chọn tiệm --"
+              searchPlaceholder="Tìm kiếm tiệm..."
+              countLabel="tiệm"
+            />
+          </div>
 
           <Input
             label="Mô tả (Tùy chọn)"
