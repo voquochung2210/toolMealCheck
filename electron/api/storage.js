@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import {app} from "electron";
+import {app, safeStorage} from "electron";
 
 function getStorageDir() {
   return app ? app.getPath("userData") : process.cwd();
@@ -35,15 +35,39 @@ export async function saveConfig(configData) {
 
 export async function loadSavedToken() {
   try {
-    const data = await fs.readFile(TOKEN_FILE, "utf-8");
-    return JSON.parse(data);
+    const fileData = await fs.readFile(TOKEN_FILE);
+    
+    if (safeStorage.isEncryptionAvailable()) {
+      try {
+        const decrypted = safeStorage.decryptString(fileData);
+        return JSON.parse(decrypted);
+      } catch (e) {
+        // Fallback cho trường hợp file đang lưu dưới dạng plain text (trước khi nâng cấp)
+        return JSON.parse(fileData.toString("utf-8"));
+      }
+    } else {
+      return JSON.parse(fileData.toString("utf-8"));
+    }
   } catch {
     return null;
   }
 }
 
 export async function saveTokenStorage(tokenData) {
-  await fs.writeFile(TOKEN_FILE, JSON.stringify(tokenData, null, 2), "utf-8");
+  if (!tokenData) {
+    // Nếu tokenData là null (đăng xuất), xoá nội dung hoặc ghi rỗng
+    await fs.writeFile(TOKEN_FILE, "", "utf-8");
+    return null;
+  }
+
+  const jsonString = JSON.stringify(tokenData, null, 2);
+
+  if (safeStorage.isEncryptionAvailable()) {
+    const encryptedBuffer = safeStorage.encryptString(jsonString);
+    await fs.writeFile(TOKEN_FILE, encryptedBuffer);
+  } else {
+    await fs.writeFile(TOKEN_FILE, jsonString, "utf-8");
+  }
   return tokenData;
 }
 

@@ -18,7 +18,7 @@ import pkg from "electron-updater";
 const {autoUpdater} = pkg;
 
 dotenv.config();
-
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 import {
   loginApi,
   fetchMealList,
@@ -284,15 +284,31 @@ async function ensureValidTokenOrRefresh() {
     return tokenData;
   }
 
-  if (config.username && config.password) {
+  // Tự động gia hạn sử dụng credentials lưu trong tokenData (đã mã hóa)
+  const savedUsername = tokenData?.storedUsername || config.username;
+  const savedPassword = tokenData?.storedPassword || config.password;
+  const savedDomain = tokenData?.storedDomain || config.domain || "";
+
+  if (savedUsername && savedPassword) {
     try {
       console.log("🔄 Đang tự động làm mới token đăng nhập THACO...");
       const newTokenData = await loginApi({
-        username: config.username,
-        password: config.password,
-        domain: config.domain || "",
+        username: savedUsername,
+        password: savedPassword,
+        domain: savedDomain,
       });
+      // Tiếp tục lưu lại thông tin đăng nhập vào token mới để lần sau gia hạn tiếp
+      newTokenData.storedUsername = savedUsername;
+      newTokenData.storedPassword = savedPassword;
+      newTokenData.storedDomain = savedDomain;
+      
       await saveTokenStorage(newTokenData);
+      
+      // Xoá password cũ khỏi config nếu còn sót
+      if (config.password) {
+        currentConfig = await saveConfig({ ...config, password: "" });
+      }
+      
       return newTokenData;
     } catch (err) {
       console.error("⚠️ Tự động gia hạn token thất bại:", err.message);
@@ -303,9 +319,10 @@ async function ensureValidTokenOrRefresh() {
 }
 
 async function runDailyCheckFlow({silent = false} = {}) {
+  let tokenData = null;
   try {
     const config = currentConfig || (await loadConfig());
-    const tokenData = await ensureValidTokenOrRefresh();
+    tokenData = await ensureValidTokenOrRefresh();
 
     if (!tokenData) {
       if (!silent) {
@@ -433,7 +450,7 @@ async function runDailyCheckFlow({silent = false} = {}) {
     return payload;
   } catch (err) {
     console.error("❌ Lỗi tra cứu suất ăn:", err.message);
-    return {success: false, error: err.message};
+    return {success: false, error: err.message, user: tokenData};
   }
 }
 
@@ -496,12 +513,18 @@ async function setupScheduler() {
 ipcMain.handle("auth:login", async (_event, credentials) => {
   try {
     const tokenData = await loginApi(credentials);
+    
+    // Lưu thông tin đăng nhập vào tokenData (sẽ được mã hoá bằng safeStorage)
+    tokenData.storedUsername = credentials.username;
+    tokenData.storedPassword = credentials.password;
+    tokenData.storedDomain = credentials.domain || "";
     await saveTokenStorage(tokenData);
+    
     currentConfig = await saveConfig({
       ...currentConfig,
-      username: credentials.username,
-      password: credentials.password,
-      domain: credentials.domain || "",
+      username: credentials.username, // Chỉ để username dạng plain text nếu cần hiện UI (tuỳ chọn)
+      password: "", // Xoá password khỏi config
+      domain: "",
     });
 
     const mealData = await runDailyCheckFlow({silent: true});

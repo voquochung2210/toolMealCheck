@@ -77,6 +77,9 @@ export default function App() {
         });
       } else if (res && res.reason === "unauthenticated") {
         setUser(null);
+      } else if (res && res.user) {
+        // Vẫn set user nếu lỗi API nhưng token vẫn hợp lệ
+        setUser(res.user);
       }
     }
     setLoading(false);
