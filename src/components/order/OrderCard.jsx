@@ -24,10 +24,17 @@ export default function OrderCard({ order, onClick }) {
   return (
     <div className="glass-panel order-card" onClick={onClick}>
       <div className="order-card-header">
-        <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
-          {order.password && <Lock size={14} color="var(--warning-text)" />}
-          {order.code ? `[${order.code}] ${order.title}` : order.title}
-        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
+            {order.password && <Lock size={14} color="var(--warning-text)" />}
+            {order.title}
+          </h3>
+          {order.code && (
+            <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+              [{order.code}]
+            </span>
+          )}
+        </div>
         {getStatusBadge()}
       </div>
       

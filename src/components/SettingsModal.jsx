@@ -439,10 +439,16 @@ export default function SettingsModal({ config, onClose, onSave }) {
                 className="btn-secondary"
                 style={{ padding: '6px 12px', fontSize: '0.8rem', gap: 6 }}
                 onClick={handleCheckUpdate}
-                disabled={checkingUpdate}
+                disabled={checkingUpdate || updateStatus?.status === 'downloading' || updateStatus?.status === 'downloaded'}
               >
                 <RefreshCw size={14} className={checkingUpdate ? 'spin' : ''} />
-                {checkingUpdate ? 'Đang Check...' : 'Kiểm Tra Cập Nhật'}
+                {checkingUpdate
+                  ? 'Đang Check...'
+                  : updateStatus?.status === 'downloading'
+                  ? 'Đang Tải Về...'
+                  : updateStatus?.status === 'downloaded'
+                  ? 'Đã Tải Xong'
+                  : 'Kiểm Tra Cập Nhật'}
               </button>
             </div>
             {updateMsg && (

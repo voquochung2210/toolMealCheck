@@ -1,6 +1,6 @@
 {
   "name": "tool-check-com",
-  "version": "2.2.3",
+  "version": "2.2.5",
   "description": "Tool tự động kiểm tra món ăn đã đặt THACO",
   "main": "electron/main.js",
   "type": "module",
@@ -14,7 +14,7 @@
   },
   "build": {
     "appId": "com.thaco.mealcheck",
-    "productName": "ThacoMealCheck",
+    "productName": "ThacoFood",
     "directories": {
       "output": "dist"
     },
@@ -32,15 +32,18 @@
           ]
         }
       ],
-      "icon": "electron/assets/icon.ico",
+      "icon": "dist-react/icon.png",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Thaco Meal Check"
+      "shortcutName": "ThacoFood",
+      "guid": "com.thaco.mealcheck"
     },
     "publish": [
       {

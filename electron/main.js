@@ -83,8 +83,9 @@ if (!gotTheLock) {
 
   app.whenReady().then(async () => {
     // Đăng ký AppUserModelId cho Windows Toast Notification hiển thị chuẩn
+    // Cần khớp với "appId" trong package.json để Windows lấy đúng icon từ shortcut khi cài đặt
     if (process.platform === "win32") {
-      app.setAppUserModelId("Tool này khá xịn");
+      app.setAppUserModelId("com.thaco.mealcheck");
     }
 
     currentConfig = await loadConfig();
@@ -123,7 +124,7 @@ function showOrCreateWindow() {
 }
 
 function getAppIcon() {
-  const iconPath = path.join(__dirname, "assets/icon.png");
+  const iconPath = path.join(__dirname, "../dist-react/icon.png");
   return nativeImage.createFromPath(iconPath);
 }
 
@@ -149,7 +150,7 @@ async function updateTrayMenu(todaySummary = "Chưa kiểm tra") {
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: `🍱 THACO Meal Check (${userName})`,
+      label: `🍱 THACO Food (${userName})`,
       enabled: false,
     },
     {
@@ -209,7 +210,7 @@ async function updateTrayMenu(todaySummary = "Chưa kiểm tra") {
 
 function createWindow() {
   const isHiddenArg = process.argv.includes("--hidden");
-  const iconPath = path.join(__dirname, "assets/icon.png");
+  const iconPath = path.join(__dirname, "../dist-react/icon.png");
 
   mainWindow = new BrowserWindow({
     width: 960,
@@ -217,7 +218,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     show: !isHiddenArg,
-    title: "Cơm Nước THACO",
+    title: "ThacoFood",
     icon: iconPath,
     autoHideMenuBar: true,
     webPreferences: {
@@ -258,8 +259,9 @@ function createWindow() {
       mainWindow.hide();
       if (tray && !tray.isDestroyed() && Notification.isSupported()) {
         new Notification({
-          title: "🍱 THACO Meal Check",
+          title: "🍱 THACO Food",
           body: "Ứng dụng đã được thu nhỏ xuống khay hệ thống!",
+          icon: getAppIcon(),
         }).show();
       }
     }
@@ -306,6 +308,7 @@ async function runDailyCheckFlow({silent = false} = {}) {
         new Notification({
           title: "⚠️ Chưa Đăng Nhập THACO Portal",
           body: "Vui lòng mở ứng dụng và nhập tài khoản đăng nhập.",
+          icon: getAppIcon(),
         }).show();
       }
       return {success: false, reason: "unauthenticated"};
@@ -340,7 +343,7 @@ async function runDailyCheckFlow({silent = false} = {}) {
         : todayMeal.tenMonAn;
       summaryText = `${dishDetail}${locationName ? ` - ${locationName}` : ""}`;
 
-      if (config.notifyEnabled !== false && Notification.isSupported()) {
+      if (config.notifyEnabled !== false && !silent && Notification.isSupported()) {
         const notiTitle = `🍱 Món Cơm Hôm Nay (${todayMeal.thu || todayStr})`;
 
         let notiMsg = `Món: ${todayMeal.tenMonAn}`;
@@ -378,6 +381,8 @@ async function runDailyCheckFlow({silent = false} = {}) {
 
         if (notiIcon && !notiIcon.isEmpty()) {
           notiOptions.icon = notiIcon;
+        } else {
+          notiOptions.icon = getAppIcon();
         }
 
         const notification = new Notification(notiOptions);
@@ -389,10 +394,11 @@ async function runDailyCheckFlow({silent = false} = {}) {
         notification.show();
       }
     } else {
-      if (config.notifyEnabled !== false && Notification.isSupported()) {
+      if (config.notifyEnabled !== false && !silent && Notification.isSupported()) {
         new Notification({
           title: "🍱 Thông Báo Suất Ăn THACO",
           body: "Hôm nay bạn không có lịch đăng ký ăn cơm.",
+          icon: getAppIcon(),
         }).show();
       }
     }

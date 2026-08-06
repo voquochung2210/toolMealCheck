@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOrders } from '../../hooks/useOrders';
 import { Plus, Store, Lock, Users, Clock, CheckCircle, RefreshCw, Search } from 'lucide-react';
 import OrderCard from './OrderCard';
+import OrderCardSkeleton from './OrderCardSkeleton';
 import CreateOrderModal from './CreateOrderModal';
 import OrderDetailModal from './OrderDetailModal';
 import ShopMenuManager from './ShopMenuManager';
@@ -95,8 +96,6 @@ export default function DrinkOrderPage({ user, refreshTrigger }) {
         </div>
       </div>
 
-      {loading && <div style={{ textAlign: 'center', padding: '20px' }}><div className="spin" style={{ display: 'inline-block' }}><RefreshCw size={24} /></div></div>}
-      
       {error && (
         <div style={{ padding: '15px', background: 'var(--danger-bg)', color: 'var(--danger-text)', borderRadius: '8px', marginBottom: '20px' }}>
           {error}
@@ -110,13 +109,19 @@ export default function DrinkOrderPage({ user, refreshTrigger }) {
       )}
 
       <div className="order-grid">
-        {orders.map((order) => (
-          <OrderCard 
-            key={order.id} 
-            order={order} 
-            onClick={() => handleOrderClick(order)} 
-          />
-        ))}
+        {loading ? (
+          Array.from({ length: 3 }).map((_, idx) => (
+            <OrderCardSkeleton key={idx} />
+          ))
+        ) : (
+          orders.map((order) => (
+            <OrderCard 
+              key={order.id} 
+              order={order} 
+              onClick={() => handleOrderClick(order)} 
+            />
+          ))
+        )}
       </div>
 
       <Pagination 

@@ -593,7 +593,7 @@ body {
 
 .form-input, .form-select {
   width: 100%;
-  background: var(--btn-secondary-bg);
+  background: var(--input-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
@@ -817,7 +817,7 @@ body {
   padding: 6px 12px;
   font-size: 0.8rem;
   border: 1px solid var(--glass-border);
-  background: var(--btn-secondary-bg);
+  background: var(--input-bg);
   color: var(--text-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -840,7 +840,7 @@ body {
   height: 30px;
   border-radius: 50%;
   border: 1px solid var(--glass-border);
-  background: var(--btn-secondary-bg);
+  background: var(--input-bg);
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -1121,4 +1121,20 @@ body {
     color: var(--text-muted);
     font-weight: normal;
   }
+}
+
+/* ===== SKELETON LOADING ===== */
+.skeleton-box {
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-primary) 50%, var(--bg-secondary) 75%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-card {
+  pointer-events: none;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
