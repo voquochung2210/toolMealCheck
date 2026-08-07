@@ -9,6 +9,15 @@ const OrderExport = forwardRef(({ order, items }, ref) => {
     return new Intl.NumberFormat('vi-VN').format(amount);
   };
 
+  const escapeHtml = (str) => {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
   const getHtmlContent = () => {
     if (!exportRef.current) return '';
     return `
@@ -35,10 +44,10 @@ const OrderExport = forwardRef(({ order, items }, ref) => {
       </head>
       <body>
         <div class="header">
-          <h2>${order.title}</h2>
-          <div class="meta">Mã order: #${order.id}</div>
-          <div class="meta">Tiệm: ${order.shop_name || 'Không xác định'}</div>
-          <div class="meta">Người tạo: ${order.created_by_name}</div>
+          <h2>${escapeHtml(order.title)}</h2>
+          <div class="meta">Mã order: ${escapeHtml(order.code || order.id)}</div>
+          <div class="meta">Tiệm: ${escapeHtml(order.shop_name || 'Không xác định')}</div>
+          <div class="meta">Người tạo: ${escapeHtml(order.created_by_name)}</div>
           <div class="meta">Ngày: ${new Date(order.created_at).toLocaleString('vi-VN')}</div>
         </div>
 
@@ -59,12 +68,12 @@ const OrderExport = forwardRef(({ order, items }, ref) => {
               <tr>
                 <td class="text-center">${index + 1}</td>
                 <td>
-                  <strong>${item.user_name}</strong>
-                  ${item.note ? `<br><small style="color: #666;">📝 ${item.note}</small>` : ''}
+                  <strong>${escapeHtml(item.user_name)}</strong>
+                  ${item.note ? `<br><small style="color: #666;">📝 ${escapeHtml(item.note)}</small>` : ''}
                 </td>
-                <td><strong>${item.drink_name}</strong></td>
-                <td>${item.size}</td>
-                <td>${item.sugar_level} / ${item.ice_level}</td>
+                <td><strong>${escapeHtml(item.drink_name)}</strong></td>
+                <td>${escapeHtml(item.size)}</td>
+                <td>${escapeHtml(item.sugar_level)} / ${escapeHtml(item.ice_level)}</td>
                 <td class="text-center"><strong>${item.quantity}</strong></td>
                 <td class="text-right"><strong>${formatCurrency(item.price * item.quantity)}đ</strong></td>
               </tr>
@@ -80,7 +89,7 @@ const OrderExport = forwardRef(({ order, items }, ref) => {
           <div class="qr-section">
             <h4>QR Chuyển Khoản</h4>
             <img src="${order.qr_image_base64}" class="qr-img" />
-            <div class="bank-info">${order.bank_info || ''}</div>
+            <div class="bank-info">${escapeHtml(order.bank_info || '')}</div>
           </div>
         ` : ''}
       </body>
@@ -133,7 +142,7 @@ const OrderExport = forwardRef(({ order, items }, ref) => {
       <div ref={exportRef} className="export-preview">
         <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
           <h2 style={{ margin: '0 0 5px' }}>{order.title}</h2>
-          <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>Mã order: #{order.id}</div>
+          <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>Mã order: {order.code || order.id}</div>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>Tiệm: {order.shop_name || 'Không xác định'}</div>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '5px' }}>Người tạo: {order.created_by_name}</div>
           <div style={{ fontSize: '14px', color: '#666' }}>Ngày: {new Date(order.created_at).toLocaleString('vi-VN')}</div>

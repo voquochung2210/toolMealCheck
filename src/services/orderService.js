@@ -79,6 +79,36 @@ export const orderService = {
   },
 
   async createOrder(orderData) {
+    try {
+      // Gọi hàm DB atomic (advisory lock) để tránh race condition về
+      // giới hạn 5 order và tên trùng khi nhiều người tạo cùng lúc.
+      const { data, error } = await supabase.rpc('create_order', {
+        p_title: orderData.title,
+        p_description: orderData.description ?? null,
+        p_shop_id: orderData.shop_id ?? null,
+        p_shop_name: orderData.shop_name ?? null,
+        p_password: orderData.password ?? null,
+        p_created_by: orderData.created_by,
+        p_created_by_name: orderData.created_by_name ?? null,
+        p_qr_image_base64: orderData.qr_image_base64 ?? null,
+        p_bank_info: orderData.bank_info ?? null,
+      });
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      const msg = String(err?.message || err || '');
+      // Nếu hàm create_order chưa được tạo trên Supabase (chưa apply migration),
+      // fallback về logic cũ (kém atomic nhưng vẫn dùng được).
+      const functionMissing =
+        msg.includes('does not exist') ||
+        msg.includes('Could not find the function') ||
+        msg.includes('PGRST116');
+      if (!functionMissing) throw err;
+      return this._createOrderLegacy(orderData);
+    }
+  },
+
+  async _createOrderLegacy(orderData) {
     // Check maximum active orders limit per user
     const { count: activeOrdersCount, error: countError } = await supabase
       .from('orders')
