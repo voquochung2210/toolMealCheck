@@ -16,6 +16,7 @@ export default function RegisterDrinkForm({ shopId, onSubmit, loading, isLocked,
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
   const [note, setNote] = useState('');
+  const [drinkCode, setDrinkCode] = useState('');
 
   const [isCustomMode, setIsCustomMode] = useState(false);
 
@@ -110,14 +111,20 @@ export default function RegisterDrinkForm({ shopId, onSubmit, loading, isLocked,
 
   const quickAddCustomToMenu = async () => {
     if (!drinkName) return;
+    if (!drinkCode.trim()) return toast.error('Vui lòng nhập mã món để lưu vào menu');
+    const codeRegex = /^[A-Z0-9_-]+$/;
+    if (!codeRegex.test(drinkCode.trim())) return toast.error('Mã món chỉ gồm chữ không dấu, số, gạch ngang hoặc gạch dưới');
+
     try {
       await shopService.createMenuItem({
         shop_id: shopId,
+        code: drinkCode.trim(),
         name: drinkName,
         default_price: parseInt(price, 10) || 0,
         category: 'Thêm nhanh'
       });
       setIsCustomMode(false);
+      setDrinkCode('');
       await loadMenuItems();
       toast.success('Đã thêm món vào menu!');
     } catch (err) {
@@ -202,10 +209,9 @@ export default function RegisterDrinkForm({ shopId, onSubmit, loading, isLocked,
         </div>
       )}
 
-      <div style={{ marginBottom: '12px' }}>
-        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: 'var(--text-secondary)' }}>Món nước *</label>
-        
-        {!isCustomMode && menuItems.length > 0 ? (
+      {!isCustomMode && menuItems.length > 0 ? (
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: 'var(--text-secondary)' }}>Món nước *</label>
           <SearchableSelect
             options={menuOptions}
             value={drinkName}
@@ -215,30 +221,49 @@ export default function RegisterDrinkForm({ shopId, onSubmit, loading, isLocked,
             customOption={{ value: '__custom__', label: 'Khác (Nhập tay)...' }}
             required
           />
-        ) : (
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Input 
-              value={drinkName} 
-              onChange={e => setDrinkName(e.target.value)} 
-              placeholder="Tên món..." 
-              maxLength={100}
-              required
-              containerStyle={{ flex: 1, margin: 0 }}
-            />
-            {menuItems.length > 0 && (
-              <button type="button" className="btn-secondary" onClick={() => setIsCustomMode(false)} style={{ padding: '0 10px', fontSize: '0.8rem' }}>
-                Hủy
-              </button>
-            )}
+        </div>
+      ) : (
+        <div style={{ marginBottom: '12px', padding: '12px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--accent-primary)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+             <strong style={{ fontSize: '0.85rem', color: 'var(--accent-primary)' }}>Món nước *</strong>
+             {menuItems.length > 0 && (
+               <button type="button" className="btn-secondary" onClick={() => setIsCustomMode(false)} style={{ fontSize: '0.75rem', padding: '2px 8px', height: 'auto' }}>
+                 Hủy
+               </button>
+             )}
           </div>
-        )}
-      </div>
-
-      {isCustomMode && shopId && (
-        <div style={{ marginBottom: '12px', fontSize: '0.8rem', display: 'flex', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn-secondary" onClick={quickAddCustomToMenu} style={{ padding: '4px 8px', fontSize: '0.75rem' }}>
-            <Plus size={12} /> Lưu vào Menu tiệm
-          </button>
+          
+          <div style={{ display: 'flex', gap: '8px', marginBottom: shopId ? '10px' : '0' }}>
+            <div style={{ width: '140px' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '4px', color: 'var(--text-secondary)' }}>Mã món</label>
+              <Input 
+                value={drinkCode}
+                onChange={e => setDrinkCode(e.target.value.toUpperCase())}
+                placeholder="VD: SP01"
+                maxLength={20}
+                containerStyle={{ margin: 0 }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '4px', color: 'var(--text-secondary)' }}>Tên món</label>
+              <Input 
+                value={drinkName} 
+                onChange={e => setDrinkName(e.target.value)} 
+                placeholder="Nhập tên món..." 
+                maxLength={100}
+                required
+                containerStyle={{ margin: 0 }}
+              />
+            </div>
+          </div>
+          
+          {shopId && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-secondary" onClick={quickAddCustomToMenu} style={{ padding: '6px 12px', fontSize: '0.75rem', height: 'auto' }}>
+                <Plus size={12} style={{ marginRight: '4px' }} /> Lưu vào Menu tiệm
+              </button>
+            </div>
+          )}
         </div>
       )}
 

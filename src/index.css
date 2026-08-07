@@ -1038,7 +1038,7 @@ body {
 
 .menu-item-list-row {
   display: grid;
-  grid-template-columns: 90px 2fr 1fr 1fr auto;
+  grid-template-columns: 150px 2fr 1fr 1fr auto;
   gap: 12px;
   align-items: center;
   padding: 10px 12px;

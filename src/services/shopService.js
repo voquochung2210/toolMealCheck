@@ -93,6 +93,19 @@ export const shopService = {
   },
 
   async deleteShop(id) {
+    // Check if shop is used in any active order
+    const { data: activeOrders, error: checkError } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('shop_id', id)
+      .in('status', ['open', 'locked'])
+      .limit(1);
+      
+    if (checkError) throw checkError;
+    if (activeOrders && activeOrders.length > 0) {
+      throw new Error('Không thể xóa tiệm vì đang có order hoạt động sử dụng tiệm này.');
+    }
+
     const { data, error } = await supabase
       .from('shops')
       .update({ is_active: false })
@@ -207,6 +220,41 @@ export const shopService = {
   },
 
   async deleteMenuItem(id) {
+    // 1. Get the menu item to find its shop_id and name
+    const { data: menuItem, error: fetchError } = await supabase
+      .from('menu_items')
+      .select('shop_id, name')
+      .eq('id', id)
+      .single();
+      
+    if (fetchError) throw fetchError;
+
+    // 2. Check if there are active orders for this shop
+    const { data: activeOrders, error: ordersError } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('shop_id', menuItem.shop_id)
+      .in('status', ['open', 'locked']);
+      
+    if (ordersError) throw ordersError;
+    
+    if (activeOrders && activeOrders.length > 0) {
+      const activeOrderIds = activeOrders.map(o => o.id);
+      // 3. Check if any order_item in these active orders uses this drink_name
+      const { data: activeOrderItems, error: itemsError } = await supabase
+        .from('order_items')
+        .select('id')
+        .in('order_id', activeOrderIds)
+        .eq('drink_name', menuItem.name)
+        .limit(1);
+        
+      if (itemsError) throw itemsError;
+      
+      if (activeOrderItems && activeOrderItems.length > 0) {
+         throw new Error(`Không thể xóa món "${menuItem.name}" vì đang được người khác đăng ký trong một order hoạt động.`);
+      }
+    }
+
     const { data, error } = await supabase
       .from('menu_items')
       .update({ is_active: false })

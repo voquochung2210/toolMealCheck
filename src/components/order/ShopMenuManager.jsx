@@ -392,7 +392,18 @@ function MenuItemsList({ shopId }) {
         <div style={{ paddingBottom: '20px' }}>
           {/* Header Row for clarity */}
           {items.length > 0 && (
-            <div className="menu-item-list-row hide-on-mobile" style={{ background: 'transparent', borderBottom: '2px solid var(--glass-border)', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', paddingBottom: '8px', paddingTop: 0 }}>
+            <div className="menu-item-list-row hide-on-mobile" style={{ 
+              background: 'var(--bg-primary)', 
+              borderBottom: '2px solid var(--glass-border)', 
+              color: 'var(--text-muted)', 
+              fontWeight: 600, 
+              fontSize: '0.85rem', 
+              paddingTop: '10px',
+              paddingBottom: '10px',
+              position: 'sticky',
+              top: '-1px',
+              zIndex: 10
+            }}>
               <span>Mã SP</span>
               <span>Tên món</span>
               <span>Giá</span>
